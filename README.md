@@ -1,2 +1,20 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/F63P1L7A)
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=20151501&assignment_repo_type=AssignmentRepo)
+# Email Parser Project
+
+This project is part of a multi-sprint development plan to build an AI-powered phishing email detection and analysis tool.  
+The system parses emails, extracts features, and integrates with machine learning models to detect malicious content.
+
+##  Features
+- Parse `.eml` or raw email files
+- Extract headers, body, links, and attachments
+- Integration with machine learning (future sprints)
+- CI/CD with GitHub Actions
+
+##  Project Structure
+├── src/ # Source code
+│ └── parser.py # Email parser (to be implemented)
+├── tests/ # Unit tests
+│ └── test_parser.py
+├── docs/ # Documentation
+├── requirements.txt # Python dependencies
+├── LICENSE # Open source license
+└── README.md # Project overview
