@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard Pro - Advanced Email Security Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .shield-icon {
+            width: 28px;
+            height: 28px;
+            margin-right: 12px;
+            background: #3b82f6;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .shield-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 18px;
+            background: white;
+            clip-path: polygon(50% 0%, 0% 40%, 50% 100%, 100% 40%);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        /* Main Content */
+        .main {
+            padding: 48px 0;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .hero-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 16px;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+
+        .upload-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 32px;
+            transition: all 0.2s;
+        }
+
+        .upload-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .upload-card.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+
+        .upload-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .upload-icon {
+            width: 24px;
+            height: 24px;
+            background: #3b82f6;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .upload-icon.file::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            width: 12px;
+            height: 16px;
+            border: 2px solid white;
+            border-top: 4px solid white;
+            border-radius: 1px;
+        }
+
+        .upload-icon.paste::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border: 2px solid white;
+            border-radius: 2px;
+        }
+
+        .upload-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .upload-description {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .file-drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 48px 24px;
+            text-align: center;
+            background: #f8fafc;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .file-drop-zone:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .file-drop-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            background: #e2e8f0;
+            border-radius: 24px;
+            position: relative;
+        }
+
+        .file-drop-icon::before {
+            content: '↑';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        .file-drop-text {
+            font-size: 16px;
+            color: #475569;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .file-drop-subtext {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .paste-area {
+            position: relative;
+        }
+
+        .paste-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            background: #f9fafb;
+        }
+
+        .paste-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+            background: white;
+        }
+
+        .paste-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .paste-placeholder {
+            color: #9ca3af;
+        }
+
+        /* Privacy Notice */
+        .privacy-notice {
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 32px 0;
+        }
+
+        .privacy-notice-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .privacy-notice-content {
+            font-size: 14px;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+
+        /* Analyze Button */
+        .analyze-section {
+            text-align: center;
+            margin: 32px 0;
+        }
+
+        .analyze-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .analyze-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Features Section */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-top: 64px;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: #f1f5f9;
+            border-radius: 32px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .feature-icon.clock::before {
+            content: '';
+            width: 28px;
+            height: 28px;
+            border: 3px solid #64748b;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .feature-icon.clock::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 12px;
+            background: #64748b;
+            transform-origin: bottom;
+            transform: translate(-50%, -75%) rotate(45deg);
+        }
+
+        .feature-icon.shield::before {
+            content: '';
+            width: 28px;
+            height: 32px;
+            background: #64748b;
+            clip-path: polygon(50% 0%, 0% 40%, 50% 100%, 100% 40%);
+        }
+
+        .feature-icon.report::before {
+            content: '';
+            width: 24px;
+            height: 32px;
+            background: #64748b;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .feature-icon.report::after {
+            content: '';
+            position: absolute;
+            top: 26px;
+            left: 26px;
+            width: 12px;
+            height: 2px;
+            background: #f1f5f9;
+            box-shadow: 0 4px 0 #f1f5f9, 0 8px 0 #f1f5f9;
+        }
+
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .feature-description {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Help Button */
+        .help-button {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+
+        .help-button:hover {
+            background: #334155;
+            transform: scale(1.05);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .upload-section {
+                grid-template-columns: 1fr;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .hero-title {
+                font-size: 24px;
+            }
+
+            .nav-actions {
+                gap: 8px;
+            }
+
+            .nav-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="shield-icon"></div>
+                    <span>PhishGuard Pro</span>
+                    <span style="font-weight: 400; font-size: 14px; color: #64748b; margin-left: 8px;">Advanced Email Security Analysis</span>
+                </div>
+                <nav class="nav-actions">
+                    <a href="#" class="nav-btn">Upload</a>
+                    <a href="#" class="nav-btn">Analyze</a>
+                    <a href="#" class="nav-btn">Protect</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <section class="hero-section">
+                <h1 class="hero-title">Analyze Suspicious Emails</h1>
+                <p class="hero-subtitle">
+                    Upload or paste suspicious email content to get detailed security analysis with threat detection, risk assessment, and actionable recommendations.
+                </p>
+            </section>
+
+            <section class="upload-section">
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <div class="upload-icon file"></div>
+                        <h2 class="upload-title">Upload Email File</h2>
+                    </div>
+                    <p class="upload-description">
+                        Drag & drop .eml or .msg files, or click to browse
+                    </p>
+                    <div class="file-drop-zone" onclick="document.getElementById('fileInput').click()">
+                        <div class="file-drop-icon"></div>
+                        <div class="file-drop-text">Drop email files here or click to browse</div>
+                        <div class="file-drop-subtext">Supports .eml and .msg formats</div>
+                    </div>
+                    <input type="file" id="fileInput" accept=".eml,.msg" style="display: none;">
+                </div>
+
+                <div class="upload-card active">
+                    <div class="upload-header">
+                        <div class="upload-icon paste"></div>
+                        <h2 class="upload-title">Paste Email Content</h2>
+                    </div>
+                    <p class="upload-description">
+                        Copy and paste email headers and content directly
+                    </p>
+                    <div class="paste-area">
+                        <label class="paste-label" for="emailContent">Email Content</label>
+                        <textarea 
+                            id="emailContent" 
+                            class="paste-textarea" 
+                            placeholder="Paste your email content here including headers (From, To, Subject, etc.)..."
+                        ></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <div class="privacy-notice">
+                <div class="privacy-notice-header">
+                    Privacy Notice:
+                </div>
+                <div class="privacy-notice-content">
+                    Your email content is analyzed locally and securely. We do not store or share your email data. All analysis is performed in real-time and results are not retained after your session ends.
+                </div>
+            </div>
+
+            <div class="analyze-section">
+                <button class="analyze-btn" onclick="analyzeEmail()">
+                    Analyze Email for Threats
+                </button>
+            </div>
+
+            <section class="features">
+                <div class="feature">
+                    <div class="feature-icon clock"></div>
+                    <h3 class="feature-title">Advanced Threat Detection</h3>
+                    <p class="feature-description">
+                        AI-powered analysis identifies phishing, malware, and social engineering attempts using advanced threat intelligence and threat tracking.
+                    </p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon shield"></div>
+                    <h3 class="feature-title">Detailed Risk Assessment</h3>
+                    <p class="feature-description">
+                        Comprehensive scoring with clear explanations and actionable recommendations for every threat detected.
+                    </p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon report"></div>
+                    <h3 class="feature-title">Real-time Analysis</h3>
+                    <p class="feature-description">
+                        Get instant results with live progress tracking and threat intelligence updates for immediate protection.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <button class="help-button">?</button>
+
+    <script>
+        // File upload handling
+        const fileInput = document.getElementById('fileInput');
+        const fileDropZone = document.querySelector('.file-drop-zone');
+        const emailTextarea = document.getElementById('emailContent');
+        const uploadCards = document.querySelectorAll('.upload-card');
+
+        // Handle file drop
+        fileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropZone.style.borderColor = '#3b82f6';
+            fileDropZone.style.background = '#eff6ff';
+        });
+
+        fileDropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            fileDropZone.style.borderColor = '#cbd5e1';
+            fileDropZone.style.background = '#f8fafc';
+        });
+
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.style.borderColor = '#cbd5e1';
+            fileDropZone.style.background = '#f8fafc';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        // Handle textarea focus to switch active card
+        emailTextarea.addEventListener('focus', () => {
+            uploadCards.forEach(card => card.classList.remove('active'));
+            uploadCards[1].classList.add('active');
+        });
+
+        fileDropZone.addEventListener('click', () => {
+            uploadCards.forEach(card => card.classList.remove('active'));
+            uploadCards[0].classList.add('active');
+        });
+
+        function handleFileUpload(file) {
+            if (file.type === 'message/rfc822' || file.name.endsWith('.eml') || file.name.endsWith('.msg')) {
+                // Update UI to show file selected
+                fileDropZone.innerHTML = `
+                    <div class="file-drop-icon"></div>
+                    <div class="file-drop-text">File Selected: ${file.name}</div>
+                    <div class="file-drop-subtext">Click to choose a different file</div>
+                `;
+                uploadCards.forEach(card => card.classList.remove('active'));
+                uploadCards[0].classList.add('active');
+            } else {
+                alert('Please select a valid email file (.eml or .msg format)');
+            }
+        }
+
+        function analyzeEmail() {
+            const fileSelected = fileInput.files.length > 0;
+            const textContent = emailTextarea.value.trim();
+            
+            if (!fileSelected && !textContent) {
+                alert('Please upload an email file or paste email content to analyze.');
+                return;
+            }
+
+            // Simulate analysis process
+            const button = document.querySelector('.analyze-btn');
+            button.innerHTML = 'Analyzing...';
+            button.disabled = true;
+            
+            // Here you would typically send the data to your backend
+            setTimeout(() => {
+                // Redirect to results page or show results
+                alert('Analysis complete! Results would be displayed here.');
+                button.innerHTML = 'Analyze Email for Threats';
+                button.disabled = false;
+            }, 3000);
+        }
+
+        // Help button functionality
+        document.querySelector('.help-button').addEventListener('click', () => {
+            alert('Need help? Contact our support team or visit our documentation for detailed guidance on using PhishGuard Pro.');
+        });
+    </script>
+</body>
+</html>

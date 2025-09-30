@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuthFlow - Simple Authentication Service</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .feature {
+            padding: 1.5rem;
+            background: #f8f9ff;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 140px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .form-container {
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-toggle {
+            margin-top: 1.5rem;
+        }
+        
+        .form-toggle a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .form-toggle a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .success-message {
+            background: #efe;
+            color: #383;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .dashboard {
+            display: none;
+        }
+        
+        .welcome-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .back-btn {
+            background: #6c757d;
+            margin-right: 1rem;
+        }
+        
+        .loading {
+            display: none;
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- Landing Page -->
+    <div class="container" id="landingPage">
+        <div class="logo">🔐</div>
+        <h1>AuthFlow</h1>
+        <p class="subtitle">Secure, simple authentication for modern applications. Get started in seconds with our streamlined auth service.</p>
+        
+        <div class="feature-grid">
+            <div class="feature">
+                <h3>🚀 Quick Setup</h3>
+                <p>Get authenticated in under 30 seconds with our simple interface</p>
+            </div>
+            <div class="feature">
+                <h3>🔒 Secure</h3>
+                <p>Enterprise-grade security powered by Supabase authentication</p>
+            </div>
+            <div class="feature">
+                <h3>📱 Responsive</h3>
+                <p>Works seamlessly across all devices and screen sizes</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <button class="btn" onclick="showAuth('login')">Sign In</button>
+            <button class="btn btn-secondary" onclick="showAuth('register')">Get Started</button>
+        </div>
+    </div>
+
+    <!-- Authentication Form -->
+    <div class="container form-container" id="authPage">
+        <div class="logo">🔐</div>
+        <h1 id="authTitle">Welcome Back</h1>
+        <p class="subtitle" id="authSubtitle">Sign in to your account to continue</p>
+        
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        <div class="loading" id="loadingMessage">Processing...</div>
+        
+        <form id="authForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword">
+            </div>
+            
+            <button type="submit" class="btn" id="authSubmitBtn">Sign In</button>
+            <button type="button" class="btn back-btn" onclick="showLanding()">Back</button>
+        </form>
+        
+        <div class="form-toggle">
+            <p id="toggleText">Don't have an account? 
+                <a href="#" id="toggleLink" onclick="toggleAuthMode()">Sign up here</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="container dashboard" id="dashboardPage">
+        <div class="welcome-card">
+            <h1>Welcome to Your Dashboard! 🎉</h1>
+            <p>You have successfully authenticated with AuthFlow</p>
+            <p><strong>Email:</strong> <span id="userEmail"></span></p>
+            <p><strong>User ID:</strong> <span id="userId"></span></p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">1</div>
+                <div class="stat-label">Active Sessions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="loginTime">--</div>
+                <div class="stat-label">Login Time</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">✓</div>
+                <div class="stat-label">Account Status</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <button class="btn" onclick="refreshSession()">Refresh Session</button>
+            <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration - Replace with your actual Supabase credentials
+        const SUPABASE_URL = 'https://your-project-ref.supabase.co';
+        const SUPABASE_ANON_KEY = 'your-anon-key';
+        
+        // For demo purposes, we'll use a mock authentication system
+        // In production, replace this with actual Supabase initialization:
+        // const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let currentMode = 'login';
+        let mockUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+        let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        
+        // Check if user is already authenticated
+        if (currentUser) {
+            showDashboard();
+        }
+        
+        function showLanding() {
+            document.getElementById('landingPage').style.display = 'block';
+            document.getElementById('authPage').style.display = 'none';
+            document.getElementById('dashboardPage').style.display = 'none';
+        }
+        
+        function showAuth(mode) {
+            currentMode = mode;
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('authPage').style.display = 'block';
+            document.getElementById('dashboardPage').style.display = 'none';
+            
+            updateAuthUI();
+        }
+        
+        function showDashboard() {
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('authPage').style.display = 'none';
+            document.getElementById('dashboardPage').style.display = 'block';
+            
+            if (currentUser) {
+                document.getElementById('userEmail').textContent = currentUser.email;
+                document.getElementById('userId').textContent = currentUser.id;
+                document.getElementById('loginTime').textContent = new Date().toLocaleTimeString();
+            }
+        }
+        
+        function updateAuthUI() {
+            const title = document.getElementById('authTitle');
+            const subtitle = document.getElementById('authSubtitle');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const toggleText = document.getElementById('toggleText');
+            const toggleLink = document.getElementById('toggleLink');
+            const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
+            
+            if (currentMode === 'login') {
+                title.textContent = 'Welcome Back';
+                subtitle.textContent = 'Sign in to your account to continue';
+                submitBtn.textContent = 'Sign In';
+                toggleText.innerHTML = 'Don\'t have an account? ';
+                toggleLink.textContent = 'Sign up here';
+                confirmPasswordGroup.style.display = 'none';
+            } else {
+                title.textContent = 'Create Account';
+                subtitle.textContent = 'Join thousands of users who trust AuthFlow';
+                submitBtn.textContent = 'Create Account';
+                toggleText.innerHTML = 'Already have an account? ';
+                toggleLink.textContent = 'Sign in here';
+                confirmPasswordGroup.style.display = 'block';
+            }
+        }
+        
+        function toggleAuthMode() {
+            currentMode = currentMode === 'login' ? 'register' : 'login';
+            updateAuthUI();
+            hideMessages();
+        }
+        
+        function showMessage(message, isError = false) {
+            const errorMsg = document.getElementById('errorMessage');
+            const successMsg = document.getElementById('successMessage');
+            
+            if (isError) {
+                errorMsg.textContent = message;
+                errorMsg.style.display = 'block';
+                successMsg.style.display = 'none';
+            } else {
+                successMsg.textContent = message;
+                successMsg.style.display = 'block';
+                errorMsg.style.display = 'none';
+            }
+        }
+        
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+            document.getElementById('authSubmitBtn').disabled = show;
+        }
+        
+        // Mock authentication functions
+        function mockRegister(email, password) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const existingUser = mockUsers.find(u => u.email === email);
+                    if (existingUser) {
+                        reject(new Error('User already exists with this email'));
+                        return;
+                    }
+                    
+                    const newUser = {
+                        id: 'user_' + Date.now(),
+                        email: email,
+                        password: password, // In production, this would be hashed
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    mockUsers.push(newUser);
+                    localStorage.setItem('mockUsers', JSON.stringify(mockUsers));
+                    resolve({ user: newUser });
+                }, 1000);
+            });
+        }
+        
+        function mockLogin(email, password) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const user = mockUsers.find(u => u.email === email && u.password === password);
+                    if (!user) {
+                        reject(new Error('Invalid email or password'));
+                        return;
+                    }
+                    
+                    resolve({ user });
+                }, 1000);
+            });
+        }
+        
+        // Form submission handler
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            hideMessages();
+            
+            // Basic validation
+            if (!email || !password) {
+                showMessage('Please fill in all required fields', true);
+                return;
+            }
+            
+            if (currentMode === 'register') {
+                if (password !== confirmPassword) {
+                    showMessage('Passwords do not match', true);
+                    return;
+                }
+                if (password.length < 6) {
+                    showMessage('Password must be at least 6 characters long', true);
+                    return;
+                }
+            }
+            
+            showLoading(true);
+            
+            try {
+                let result;
+                if (currentMode === 'register') {
+                    result = await mockRegister(email, password);
+                    showMessage('Account created successfully! Signing you in...', false);
+                    setTimeout(() => {
+                        currentUser = result.user;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        showDashboard();
+                    }, 1500);
+                } else {
+                    result = await mockLogin(email, password);
+                    showMessage('Signed in successfully!', false);
+                    setTimeout(() => {
+                        currentUser = result.user;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        showDashboard();
+                    }, 1000);
+                }
+            } catch (error) {
+                showMessage(error.message, true);
+            } finally {
+                showLoading(false);
+            }
+        });
+        
+        function refreshSession() {
+            showMessage('Session refreshed successfully!', false);
+            setTimeout(() => hideMessages(), 2000);
+        }
+        
+        function signOut() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            document.getElementById('authForm').reset();
+            showLanding();
+            showMessage('Signed out successfully!', false);
+            setTimeout(() => hideMessages(), 2000);
+        }
+        
+        
+        // Production Supabase integration example:
+        // Uncomment and configure the following code for actual Supabase usage
+        
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        async function supabaseRegister(email, password) {
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+            });
+            if (error) throw error;
+            return data;
+        }
+        
+        async function supabaseLogin(email, password) {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+            if (error) throw error;
+            return data;
+        }
+        
+        async function supabaseSignOut() {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+        }
+        
+        // Listen for auth state changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN') {
+                currentUser = session.user;
+                showDashboard();
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                showLanding();
+            }
+        });
+        
+    </script>
+</body>
+</html>
