@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Analysis Results</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .card {
+        background: #f9f9f9;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        margin-bottom: 10px;
+      }
+      pre {
+        background: #222;
+        color: #eee;
+        padding: 10px;
+        border-radius: 6px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Email Analysis Results</h1>
+    <p>Below are the results of your uploaded/pasted email:</p>
+
+    <div id="resultsContainer"></div>
+
+    <button onclick="goBack()">← Back</button>
+
+    <script>
+      function goBack() {
+        window.location.href = "/";
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById("resultsContainer");
+        const rawData = localStorage.getItem("emailAnalysisResults");
+
+        if (!rawData) {
+          container.innerHTML =
+            "<p style='color:red;'>No analysis results found. Please analyze an email first.</p>";
+          return;
+        }
+
+        const data = JSON.parse(rawData);
+
+        // Build results HTML
+        let html = "";
+
+        if (data.name) {
+          html += `<div class="card"><h2>File Name</h2><p>${data.name}</p></div>`;
+        }
+
+        if (data.hash) {
+          html += `<div class="card"><h2>Hashes</h2><pre>${JSON.stringify(
+            data.hash,
+            null,
+            2
+          )}</pre></div>`;
+        }
+
+        if (data.stats) {
+          html += `<div class="card"><h2>Detection Stats</h2><pre>${JSON.stringify(
+            data.stats,
+            null,
+            2
+          )}</pre></div>`;
+        }
+
+        if (
+          data.engine_detected &&
+          Object.keys(data.engine_detected).length > 0
+        ) {
+          html += `<div class="card"><h2>Engines that Detected Threats</h2><pre>${JSON.stringify(
+            data.engine_detected,
+            null,
+            2
+          )}</pre></div>`;
+        } else {
+          html += `<div class="card"><h2>Engines</h2><p>No detections 🎉</p></div>`;
+        }
+
+        container.innerHTML = html;
+      });
+    </script>
+  </body>
+</html>
