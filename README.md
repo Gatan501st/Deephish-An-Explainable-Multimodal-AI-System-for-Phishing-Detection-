@@ -10,11 +10,17 @@ The system parses emails, extracts features, and integrates with machine learnin
 - CI/CD with GitHub Actions
 
 ##  Project Structure
-├── src/ # Source code
-│ └── parser.py # Email parser (to be implemented)
-├── tests/ # Unit tests
-│ └── test_parser.py
-├── docs/ # Documentation
-├── requirements.txt # Python dependencies
-├── LICENSE # Open source license
-└── README.md # Project overview
+email-parser-project/
+├── src/                    # Source code
+│   └── parser.py          # Email parser implementation
+├── tests/                  # Unit tests
+│   └── test_parser.py     # Parser test suite
+├── docs/                   # Documentation
+│   ├── architecture.md    # System architecture
+│   ├── api.md            # API documentation
+│   └── development.md    # Development guide
+├── requirements.txt       # Python dependencies
+├── .github/
+│   └── workflows/         # GitHub Actions CI/CD
+├── LICENSE               # Open source license
+└── README.md            # This file
