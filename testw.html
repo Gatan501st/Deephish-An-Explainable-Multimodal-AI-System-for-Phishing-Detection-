@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard Pro - Email Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section">
+            <div class="shield-icon">🛡</div>
+            <div class="logo-text">
+                <h1>Deepphish</h1>
+                <p>Advanced Email Security Analysis</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn">↑ Upload</button>
+            <button class="header-btn"> Analyze</button>
+            <button class="header-btn">🛡 Protect</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-title">
+            <h2>Analyze Suspicious Emails</h2>
+            <p>Upload or paste suspicious email content to get detailed security analysis with threat detection, risk assessment, and actionable recommendations.</p>
+        </div>
+
+        <div class="upload-container">
+            <div class="upload-section">
+                <div class="section-header">
+                    <span>↑</span>
+                    <h3>Upload Email File</h3>
+                </div>
+                <p class="section-description">Drag & drop .eml or .msg files, or click to browse</p>
+                
+                <label for="emailFile" class="drop-zone" id="dropZone">
+                    <div class="upload-icon">↑</div>
+                    <p id="dropZoneText">Drop email files here or click to browse</p>
+                    <small>Supports .eml and .msg formats</small>
+                </label>
+                <input type="file" id="emailFile" >
+            </div>
+
+            <div class="paste-section">
+                <div class="section-header">
+                    <span></span>
+                    <h3>Paste Email Content</h3>
+                </div>
+                <p class="section-description">Copy and paste email headers and content directly</p>
+                
+                <label for="emailContent" class="paste-label">Email Content</label>
+                <textarea id="emailContent" placeholder="Paste your email content here including headers (From, To, Subject, etc.)..."></textarea>
+            </div>
+        </div>
+
+        <div class="privacy-notice">
+            <div class="privacy-icon">ⓘ</div>
+            <div class="privacy-text">
+                <strong>Privacy Notice:</strong>
+                <p>Your email content is analyzed locally and securely. We do not store or share your email data. All analysis is performed in real-time and results are not retained after your session ends.</p>
+            </div>
+        </div>
+
+        <div class="analyze-button">
+            <button class="analyze-btn" id="analyzeBtn" disabled>
+                <span></span>
+                <span>Analyze Email for Threats</span>
+            </button>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🕐</div>
+                <h4>Advanced Threat Detection</h4>
+                <p>AI-powered analysis identifies phishing, malware, and social engineering attempts</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h4>Detailed Risk Assessment</h4>
+                <p>Comprehensive security reports with explanations and actionable insights</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✉</div>
+                <h4>Real-time Analysis</h4>
+                <p>Get instant email progress tracking and threat intelligence</p>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h3>Analysis Results</h3>
+                <button class="clear-btn" id="clearBtn">Clear Results</button>
+            </div>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const emailFile = document.getElementById('emailFile');
+        const dropZone = document.getElementById('dropZone');
+        const dropZoneText = document.getElementById('dropZoneText');
+        const emailContent = document.getElementById('emailContent');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        let selectedFile = null;
+
+        // Enable analyze button
+        function checkAnalyzeEnabled() {
+            analyzeBtn.disabled = !selectedFile && !emailContent.value.trim();
+        }
+
+        // File input handler
+        emailFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                dropZoneText.innerHTML = `<span class="file-selected">✓ ${file.name} (${formatFileSize(file.size)})</span>`;
+                checkAnalyzeEnabled();
+            }
+        });
+
+        // Drag-and-drop handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+
+            const file = e.dataTransfer.files[0];
+            if (file ) {
+                emailFile.files = e.dataTransfer.files;
+                selectedFile = file;
+                dropZoneText.innerHTML = `<span class="file-selected">✓ ${file.name} (${formatFileSize(file.size)})</span>`;
+                checkAnalyzeEnabled();
+            } 
+        });
+
+        // Paste handler
+        emailContent.addEventListener('input', checkAnalyzeEnabled);
+
+        // Analyze button handler
+        analyzeBtn.addEventListener('click', async () => {
+            try {
+                let response;
+                if (selectedFile) {
+                    const formData = new FormData();
+                    formData.append('file', selectedFile);
+
+                    response = await fetch('http://127.0.0.1:8000/ingest/email', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                } else {
+                    response = await fetch('http://127.0.0.1:8000/ingest/email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: emailContent.value }),
+                    });
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Save results to localStorage
+                localStorage.setItem('emailAnalysisResults', JSON.stringify(data));
+
+                // Redirect to results page
+                window.location.href = "results.html";
+
+            } catch (error) {
+                alert("Analysis failed: " + error.message);
+                console.error('Error:', error);
+            }
+        });
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            emailFile.value = '';
+            emailContent.value = '';
+            selectedFile = null;
+            dropZoneText.textContent = 'Drop email files here or click to browse';
+            checkAnalyzeEnabled();
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+    </script>
+
+</body>
+</html>
