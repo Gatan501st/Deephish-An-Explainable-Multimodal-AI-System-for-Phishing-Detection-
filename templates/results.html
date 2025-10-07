@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Results</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>Analysis Results</h2>
+    <pre id="out">Loading...</pre>
+    <button onclick="window.location.href='/'">← Back</button>
+  </div>
+  <script>
+    async function fetchLast() {
+      try {
+        const r = await fetch('/api/last_result');
+        const j = await r.json();
+        document.getElementById('out').textContent = JSON.stringify(j, null, 2);
+      } catch(e) {
+        document.getElementById('out').textContent = 'failed to load last result';
+      }
+    }
+    fetchLast();
+  </script>
+</body>
+</html>

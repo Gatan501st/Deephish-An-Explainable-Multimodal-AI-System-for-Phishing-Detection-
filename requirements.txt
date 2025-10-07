@@ -1,5 +1,9 @@
 FastAPI
-
+Flask==2.3.2
+eml-parser
+requests==2.31.0
+python-magic==0.4.27
+pyspark==3.0.2
 scikit-learn
 pandas
 numpy
