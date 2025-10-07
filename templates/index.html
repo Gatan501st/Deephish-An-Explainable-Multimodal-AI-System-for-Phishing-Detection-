@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Deepphish — Email Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section">
+            <div class="shield-icon">DG</div>
+            <div class="logo-text">
+                <h1>Deepphish</h1>
+                <p>Advanced Email Security Analysis</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn" id="btnOpenUpload">Upload</button>
+            <button class="header-btn" id="btnOpenResults">Results</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-title">
+            <h2>Analyze Suspicious Emails</h2>
+            <p>Upload or paste suspicious email content to get detailed security analysis with threat detection, risk assessment, and actionable recommendations.</p>
+        </div>
+
+        <div class="upload-container">
+            <!-- Email File Section -->
+            <div class="upload-section">
+                <div class="section-header">
+                    <span>↑</span>
+                    <h3>Upload Email File</h3>
+                </div>
+                <p class="section-description">Drag & drop .eml or .msg files, or click to browse</p>
+
+                <label for="emailFile" class="drop-zone" id="dropZone">
+                    <div class="upload-icon">↑</div>
+                    <p id="dropZoneText">Drop email files here or click to browse</p>
+                    <small>Supports .eml and .msg formats</small>
+                </label>
+                <input type="file" id="emailFile" accept=".eml,.msg">
+
+                <div style="margin-top:18px;">
+                    <button class="analyze-btn" id="parseEmlBtn" disabled>Parse EML</button>
+                </div>
+            </div>
+
+            <!-- Paste Email Content Section -->
+            <div class="paste-section">
+                <div class="section-header">
+                    <span></span>
+                    <h3>Paste Email / SMS Content</h3>
+                </div>
+                <p class="section-description">Copy and paste email headers and content directly</p>
+
+                <label for="emailContent" class="paste-label">Email / SMS Content</label>
+                <textarea id="emailContent" placeholder="Paste email or SMS content here including headers..."></textarea>
+
+                <div style="margin-top:12px; display:flex; gap:10px;">
+                    <button class="analyze-btn" id="storeJsonBtn" disabled>Store JSON</button>
+                    <button class="analyze-btn" id="nluBtn" disabled>Run NLU</button>
+                </div>
+            </div>
+
+            <!-- URLs and IPs Section -->
+            <div class="paste-section">
+                <div class="section-header">
+                    <span></span>
+                    <h3>Suspicious URLs & IPs</h3>
+                </div>
+                <p class="section-description">Paste any links or IP addresses found for threat analysis</p>
+
+                <label for="urlIpContent" class="paste-label">URLs / IPs</label>
+                <textarea id="urlIpContent" placeholder="Enter one URL or IP per line..."></textarea>
+
+                <div style="margin-top:12px;">
+                    <button class="analyze-btn" id="analyzeUrlBtn" disabled>Check URLs / IPs</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attachment scanner (independent) -->
+        <div class="upload-container" style="grid-template-columns: 1fr;">
+            <div class="upload-section">
+                <div class="section-header">
+                    <span></span>
+                    <h3>Attachment Scanner</h3>
+                </div>
+                <p class="section-description">Upload a single attachment file to hash and scan.</p>
+
+                <input type="file" id="attachFile" style="display:block; margin-bottom:12px;">
+                <div>
+                    <button class="analyze-btn" id="scanAttachmentBtn" disabled>Scan Attachment</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="privacy-notice">
+            <div class="privacy-icon">i</div>
+            <div class="privacy-text">
+                <strong>Privacy Notice:</strong>
+                <p>Your email content is analyzed locally and securely. We do not store or share your email data unless you explicitly save it. Results display in your browser session.</p>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h3>Analysis Results</h3>
+                <div>
+                    <button class="clear-btn" id="clearBtn">Clear Results</button>
+                    <button class="clear-btn" id="downloadBtn">Download Last</button>
+                </div>
+            </div>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+    // Elements
+    const emailFile = document.getElementById('emailFile');
+    const dropZone = document.getElementById('dropZone');
+    const dropZoneText = document.getElementById('dropZoneText');
+    const parseEmlBtn = document.getElementById('parseEmlBtn');
+
+    const emailContent = document.getElementById('emailContent');
+    const storeJsonBtn = document.getElementById('storeJsonBtn');
+    const nluBtn = document.getElementById('nluBtn');
+
+    const urlIpContent = document.getElementById('urlIpContent');
+    const analyzeUrlBtn = document.getElementById('analyzeUrlBtn');
+
+    const attachFile = document.getElementById('attachFile');
+    const scanAttachmentBtn = document.getElementById('scanAttachmentBtn');
+
+    const resultsSection = document.getElementById('resultsSection');
+    const resultsDiv = document.getElementById('results');
+    const clearBtn = document.getElementById('clearBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const btnOpenResults = document.getElementById('btnOpenResults');
+    const btnOpenUpload = document.getElementById('btnOpenUpload');
+
+    let lastResult = null;
+
+    // Helpers
+    function enableIfInputs() {
+        parseEmlBtn.disabled = !emailFile.files.length;
+        storeJsonBtn.disabled = !emailContent.value.trim();
+        nluBtn.disabled = !emailContent.value.trim();
+        analyzeUrlBtn.disabled = !urlIpContent.value.trim();
+        scanAttachmentBtn.disabled = !attachFile.files.length;
+    }
+
+    function createResultCard(title, obj, error=false) {
+        resultsSection.style.display = 'block';
+        const card = document.createElement('div');
+        card.className = 'result-card' + (error ? ' error' : '');
+        const h = document.createElement('h4');
+        h.textContent = title;
+        const pre = document.createElement('pre');
+        pre.textContent = JSON.stringify(obj, null, 2);
+        card.appendChild(h);
+        card.appendChild(pre);
+        resultsDiv.prepend(card);
+    }
+
+    function showLoading(title) {
+        const card = document.createElement('div');
+        card.className = 'result-card loading';
+        card.id = 'loading-card';
+        const h = document.createElement('h4');
+        h.textContent = title;
+        const div = document.createElement('div');
+        div.className = 'loading';
+        div.innerHTML = '<div class="spinner"></div><div>Processing...</div>';
+        card.appendChild(h);
+        card.appendChild(div);
+        resultsDiv.prepend(card);
+    }
+
+    function removeLoading() {
+        const el = document.getElementById('loading-card');
+        if (el) el.remove();
+    }
+
+    async function handleFetch(url, options, title) {
+        showLoading(title);
+        try {
+            const resp = await fetch(url, options);
+            const json = await resp.json();
+            removeLoading();
+            if (!resp.ok) {
+                createResultCard(title + ' — error', json, true);
+                lastResult = json;
+                return json;
+            }
+            createResultCard(title + ' — result', json, false);
+            lastResult = json;
+            return json;
+        } catch (err) {
+            removeLoading();
+            createResultCard(title + ' — exception', {error: err.message}, true);
+            lastResult = {error: err.message};
+            return lastResult;
+        }
+    }
+
+    // Event wiring
+    emailFile.addEventListener('change', enableIfInputs);
+    attachFile.addEventListener('change', enableIfInputs);
+    emailContent.addEventListener('input', enableIfInputs);
+    urlIpContent.addEventListener('input', enableIfInputs);
+
+    // Drop zone handlers
+    dropZone.addEventListener('click', () => emailFile.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file && (file.name.endsWith('.eml') || file.name.endsWith('.msg'))) {
+            emailFile.files = e.dataTransfer.files;
+            dropZoneText.innerHTML = `<span class="file-selected">✓ ${file.name} (${Math.round(file.size/1024)} KB)</span>`;
+            enableIfInputs();
+        } else {
+            alert('Please drop a valid .eml or .msg file');
+        }
+    });
+
+    // Buttons
+    parseEmlBtn.addEventListener('click', async () => {
+        if (!emailFile.files.length) return;
+        const form = new FormData();
+        form.append('file', emailFile.files[0]);
+        await handleFetch('/parse/eml', { method: 'POST', body: form }, 'EML Parse');
+    });
+
+    scanAttachmentBtn.addEventListener('click', async () => {
+        if (!attachFile.files.length) return;
+        const form = new FormData();
+        form.append('file', attachFile.files[0]);
+        await handleFetch('/scan/attachment', { method: 'POST', body: form }, 'Attachment Scan');
+    });
+
+    analyzeUrlBtn.addEventListener('click', async () => {
+        const lines = urlIpContent.value.split('\n').map(l => l.trim()).filter(Boolean);
+        for (const item of lines) {
+            // decide if IP or URL
+            const payload = {};
+            const host = item.split('//').pop().split('/')[0];
+            if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) payload.ip = host;
+            else payload.url = item;
+            await handleFetch('/analyze/url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }, `URL/IP check: ${item}`);
+        }
+    });
+
+    storeJsonBtn.addEventListener('click', async () => {
+        const content = emailContent.value.trim();
+        if (!content) return;
+        // basic JSON structure: user can expand as needed
+        const payload = { name: 'email_or_sms', content: content };
+        await handleFetch('/store/json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }, 'Store JSON');
+    });
+
+    nluBtn.addEventListener('click', async () => {
+        const content = emailContent.value.trim();
+        if (!content) return;
+        await handleFetch('/analyze/nlu', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: content })
+        }, 'NLU Analysis');
+    });
+
+    clearBtn.addEventListener('click', () => {
+        resultsDiv.innerHTML = '';
+        resultsSection.style.display = 'none';
+        lastResult = null;
+    });
+
+    downloadBtn.addEventListener('click', () => {
+        if (!lastResult) return alert('No last result to download');
+        const blob = new Blob([JSON.stringify(lastResult, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'deepphish_last_result.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    });
+
+    btnOpenResults.addEventListener('click', () => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+    btnOpenUpload.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // initialize state
+    enableIfInputs();
+    </script>
+</body>
+</html>
