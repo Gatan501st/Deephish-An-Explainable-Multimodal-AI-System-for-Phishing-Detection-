@@ -61,13 +61,18 @@
             color: #666;
             font-size: 0.9em;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
+            text-decoration: none;
         }
 
         .header-btn:hover {
             background: #f9f9f9;
+        }
+
+        .header-btn:visited {
+            color: #666;
         }
 
         .container {

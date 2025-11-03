@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Phishing Education — DeepPhish</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <style>
+      .education-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      .education-section {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+      }
+      .education-section h2 {
+        color: #333;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+      }
+      .education-section h3 {
+        color: #555;
+        font-size: 1.3em;
+        margin-top: 25px;
+        margin-bottom: 15px;
+      }
+      .education-section p {
+        color: #666;
+        line-height: 1.8;
+        margin-bottom: 15px;
+      }
+      .education-section ul,
+      .education-section ol {
+        color: #666;
+        line-height: 1.8;
+        margin-left: 25px;
+        margin-bottom: 20px;
+      }
+      .education-section li {
+        margin-bottom: 10px;
+      }
+      .warning-box {
+        background: #fff5f5;
+        border-left: 4px solid #c53030;
+        padding: 15px 20px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .warning-box strong {
+        color: #c53030;
+        display: block;
+        margin-bottom: 8px;
+      }
+      .tip-box {
+        background: #f0f9ff;
+        border-left: 4px solid #3182ce;
+        padding: 15px 20px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .tip-box strong {
+        color: #3182ce;
+        display: block;
+        margin-bottom: 8px;
+      }
+      .example-box {
+        background: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 15px 0;
+        font-family: "Courier New", monospace;
+        font-size: 0.9em;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #666;
+        text-decoration: none;
+        padding: 8px 16px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .back-link:hover {
+        background: #f9f9f9;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin: 30px 0;
+      }
+      .stat-card {
+        background: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 20px;
+        text-align: center;
+      }
+      .stat-card .number {
+        font-size: 2em;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+      }
+      .stat-card .label {
+        color: #666;
+        font-size: 0.9em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="/" style="text-decoration: none; color: inherit">
+        <div class="logo-section">
+          <div class="shield-icon">DG</div>
+          <div class="logo-text">
+            <h1>DeepPhish</h1>
+            <p>Advanced Email Security Analysis</p>
+          </div>
+        </div>
+      </a>
+      <div class="header-actions">
+        <a href="/" class="header-btn">Home</a>
+        <a
+          href="/education"
+          class="header-btn"
+          style="background: #5a5a5a; color: white"
+          >Education</a
+        >
+        <a href="/about" class="header-btn">About</a>
+      </div>
+    </div>
+
+    <div class="education-container">
+      <a href="/" class="back-link">← Back to Home</a>
+
+      <div class="education-section">
+        <h2>🔐 Understanding Phishing Attacks</h2>
+        <p>
+          Phishing is a cybercrime where attackers attempt to deceive
+          individuals into revealing sensitive information, such as passwords,
+          credit card numbers, or personal data, by impersonating trustworthy
+          entities through electronic communication.
+        </p>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="number">91%</div>
+            <div class="label">of cyber attacks start with phishing</div>
+          </div>
+          <div class="stat-card">
+            <div class="number">$4.5B</div>
+            <div class="label">estimated annual cost globally</div>
+          </div>
+          <div class="stat-card">
+            <div class="number">3.4B</div>
+            <div class="label">phishing emails sent daily</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="education-section">
+        <h2>🎣 Common Phishing Techniques</h2>
+
+        <h3>1. Email Spoofing</h3>
+        <p>
+          Attackers forge the sender's email address to make it appear as if the
+          email is coming from a legitimate source, such as your bank, a popular
+          service, or even someone you know.
+        </p>
+        <div class="example-box">
+          From: security@your-bank.com (actually from:
+          attacker@malicious-domain.com)
+        </div>
+
+        <h3>2. Urgency and Fear Tactics</h3>
+        <p>
+          Phishing emails often create a sense of urgency to make you act
+          quickly without thinking critically. Common tactics include:
+        </p>
+        <ul>
+          <li>"Your account will be suspended in 24 hours"</li>
+          <li>"Unauthorized login detected - verify immediately"</li>
+          <li>"You've won a prize - claim now before expiration"</li>
+          <li>"Legal action pending - respond immediately"</li>
+        </ul>
+
+        <h3>3. Link Manipulation</h3>
+        <p>
+          Attackers use deceptive links that appear legitimate but redirect to
+          malicious websites. Always hover over links to see the actual
+          destination URL.
+        </p>
+        <div class="example-box">
+          Displayed: https://your-bank.com/login<br />
+          Actual: https://your-bank-fake.com/login
+        </div>
+
+        <h3>4. Attachment-Based Attacks</h3>
+        <p>
+          Malicious attachments (PDFs, Word documents, ZIP files) may contain
+          malware, ransomware, or malicious scripts that execute when opened.
+        </p>
+
+        <h3>5. Social Engineering</h3>
+        <p>
+          Attackers research their targets and craft personalized messages that
+          seem authentic. They may reference your name, workplace, recent
+          activities, or other personal information.
+        </p>
+      </div>
+
+      <div class="education-section">
+        <h2>⚠️ Red Flags to Watch For</h2>
+
+        <div class="warning-box">
+          <strong>🚨 Warning Signs:</strong>
+          <ul style="margin-top: 10px; margin-left: 20px">
+            <li>
+              <strong>Poor grammar and spelling:</strong> Legitimate companies
+              typically proofread their communications
+            </li>
+            <li>
+              <strong>Generic greetings:</strong> "Dear Customer" instead of
+              your name
+            </li>
+            <li>
+              <strong>Suspicious sender addresses:</strong> Slight misspellings
+              or unusual domains
+            </li>
+            <li>
+              <strong>Unexpected requests:</strong> Asking for passwords, SSN,
+              or payment information
+            </li>
+            <li>
+              <strong>Urgent action required:</strong> Creating artificial time
+              pressure
+            </li>
+            <li>
+              <strong>Unusual formatting:</strong> Broken layouts, mismatched
+              fonts, or low-quality images
+            </li>
+            <li>
+              <strong>Threats or rewards:</strong> Promises of money or threats
+              of consequences
+            </li>
+            <li>
+              <strong>Mismatched URLs:</strong> Link text doesn't match the
+              actual destination
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="education-section">
+        <h2>🛡️ How to Protect Yourself</h2>
+
+        <h3>1. Verify the Source</h3>
+        <p>
+          Before clicking any links or providing information, verify the sender
+          through a separate communication channel. Contact the organization
+          directly using their official website or phone number (not from the
+          email).
+        </p>
+
+        <h3>2. Examine URLs Carefully</h3>
+        <p>Hover over links to see the actual URL before clicking. Look for:</p>
+        <ul>
+          <li>HTTPS (secure connection) - but this alone isn't enough</li>
+          <li>Correct domain spelling (no typos)</li>
+          <li>Legitimate subdomains and paths</li>
+        </ul>
+
+        <h3>3. Be Skeptical of Attachments</h3>
+        <p>
+          Never open attachments from unknown senders or unexpected emails, even
+          from known contacts. When in doubt, verify with the sender through a
+          separate channel.
+        </p>
+
+        <h3>4. Use Multi-Factor Authentication (MFA)</h3>
+        <p>
+          Enable MFA on all important accounts. Even if attackers obtain your
+          password, they'll need your second authentication method to access
+          your account.
+        </p>
+
+        <h3>5. Keep Software Updated</h3>
+        <p>
+          Regularly update your operating system, browsers, and security
+          software to protect against known vulnerabilities.
+        </p>
+
+        <h3>6. Educate Yourself and Others</h3>
+        <p>
+          Stay informed about current phishing trends and techniques. Share
+          knowledge with family, friends, and colleagues.
+        </p>
+
+        <div class="tip-box">
+          <strong>💡 Pro Tip:</strong>
+          When in doubt, don't click. If an email seems suspicious, delete it.
+          If it's legitimate, the sender will find another way to reach you.
+        </div>
+      </div>
+
+      <div class="education-section">
+        <h2>📧 Types of Phishing Attacks</h2>
+
+        <h3>Spear Phishing</h3>
+        <p>
+          Highly targeted attacks aimed at specific individuals or
+          organizations. Attackers research their targets to create convincing
+          personalized messages.
+        </p>
+
+        <h3>Whaling</h3>
+        <p>
+          A type of spear phishing targeting high-profile executives or
+          individuals with significant access to sensitive information or
+          financial resources.
+        </p>
+
+        <h3>Vishing (Voice Phishing)</h3>
+        <p>
+          Phishing attacks conducted via phone calls. Attackers may use caller
+          ID spoofing to appear as legitimate organizations.
+        </p>
+
+        <h3>SMiShing (SMS Phishing)</h3>
+        <p>
+          Phishing attacks sent via text messages. These often include links to
+          malicious websites or requests to call fake customer service numbers.
+        </p>
+
+        <h3>Angler Phishing</h3>
+        <p>
+          Attackers impersonate customer service accounts on social media
+          platforms to trick users into providing personal information or
+          credentials.
+        </p>
+      </div>
+
+      <div class="education-section">
+        <h2>✅ What to Do If You're Phished</h2>
+
+        <ol>
+          <li>
+            <strong>Change passwords immediately:</strong> If you entered
+            credentials on a phishing site, change them on the legitimate site
+            immediately.
+          </li>
+          <li>
+            <strong>Enable MFA:</strong> Add an extra layer of security if
+            available.
+          </li>
+          <li>
+            <strong>Check your accounts:</strong> Review bank statements, credit
+            reports, and account activities for unauthorized transactions.
+          </li>
+          <li>
+            <strong>Contact financial institutions:</strong> If financial
+            information was compromised, contact your bank or credit card
+            company immediately.
+          </li>
+          <li>
+            <strong>Report the incident:</strong> Report phishing attempts to:
+            <ul style="margin-top: 10px">
+              <li>Your organization's IT security team</li>
+              <li>The Anti-Phishing Working Group (reportphishing@apwg.org)</li>
+              <li>FBI Internet Crime Complaint Center (IC3)</li>
+              <li>The impersonated organization</li>
+            </ul>
+          </li>
+          <li>
+            <strong>Run security scans:</strong> Use antivirus software to scan
+            for malware.
+          </li>
+          <li>
+            <strong>Monitor your credit:</strong> Consider placing a fraud alert
+            or credit freeze.
+          </li>
+        </ol>
+      </div>
+
+      <div class="education-section">
+        <h2>🔍 Using DeepPhish for Protection</h2>
+        <p>
+          DeepPhish uses advanced AI and machine learning to analyze emails and
+          detect potential phishing attempts. Our system examines:
+        </p>
+        <ul>
+          <li>
+            <strong>Content Analysis:</strong> Language patterns, urgency
+            indicators, and suspicious wording
+          </li>
+          <li>
+            <strong>URL Verification:</strong> Checking links against threat
+            intelligence databases
+          </li>
+          <li>
+            <strong>Attachment Scanning:</strong> Analyzing file attachments for
+            malicious content
+          </li>
+          <li>
+            <strong>Header Analysis:</strong> Examining email headers for
+            spoofing indicators
+          </li>
+          <li>
+            <strong>Risk Assessment:</strong> Comprehensive scoring to evaluate
+            threat level
+          </li>
+        </ul>
+        <p>
+          However, remember that no automated system is perfect. Always use your
+          judgment and follow the best practices outlined above.
+        </p>
+      </div>
+
+      <div class="education-section">
+        <h2>📚 Additional Resources</h2>
+        <ul>
+          <li>
+            <strong>Federal Trade Commission:</strong>
+            <a
+              href="https://www.consumer.ftc.gov/articles/how-recognize-and-avoid-phishing-scams"
+              target="_blank"
+              >Phishing Scams Guide</a
+            >
+          </li>
+          <li>
+            <strong>Cybersecurity & Infrastructure Security Agency:</strong>
+            <a
+              href="https://www.cisa.gov/news-events/cybersecurity-awareness-month"
+              target="_blank"
+              >Cybersecurity Awareness Resources</a
+            >
+          </li>
+          <li>
+            <strong>Anti-Phishing Working Group:</strong>
+            <a href="https://apwg.org/" target="_blank">APWG Resources</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>

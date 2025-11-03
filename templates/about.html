@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>About — DeepPhish</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <style>
+      .about-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      .about-section {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+      }
+      .about-section h2 {
+        color: #333;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+      }
+      .about-section h3 {
+        color: #555;
+        font-size: 1.3em;
+        margin-top: 25px;
+        margin-bottom: 15px;
+      }
+      .about-section p {
+        color: #666;
+        line-height: 1.8;
+        margin-bottom: 15px;
+      }
+      .about-section ul {
+        color: #666;
+        line-height: 1.8;
+        margin-left: 25px;
+        margin-bottom: 20px;
+      }
+      .about-section li {
+        margin-bottom: 10px;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #666;
+        text-decoration: none;
+        padding: 8px 16px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .back-link:hover {
+        background: #f9f9f9;
+      }
+      .feature-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+      }
+      .feature-item {
+        background: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 20px;
+      }
+      .feature-item strong {
+        color: #333;
+        display: block;
+        margin-bottom: 8px;
+        font-size: 1.1em;
+      }
+      .feature-item p {
+        color: #666;
+        font-size: 0.9em;
+        margin: 0;
+      }
+      .tech-stack {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 6px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .tech-stack h4 {
+        color: #0369a1;
+        margin-bottom: 15px;
+      }
+      .tech-stack ul {
+        columns: 2;
+        column-gap: 30px;
+      }
+      @media (max-width: 600px) {
+        .tech-stack ul {
+          columns: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="/" style="text-decoration: none; color: inherit">
+        <div class="logo-section">
+          <div class="shield-icon">DG</div>
+          <div class="logo-text">
+            <h1>DeepPhish</h1>
+            <p>Advanced Email Security Analysis</p>
+          </div>
+        </div>
+      </a>
+      <div class="header-actions">
+        <a href="/" class="header-btn">Home</a>
+        <a href="/education" class="header-btn">Education</a>
+        <a
+          href="/about"
+          class="header-btn"
+          style="background: #5a5a5a; color: white"
+          >About</a
+        >
+      </div>
+    </div>
+
+    <div class="about-container">
+      <a href="/" class="back-link">← Back to Home</a>
+
+      <div class="about-section">
+        <h2>About DeepPhish</h2>
+        <p>
+          DeepPhish is an explainable multimodal AI system designed to detect
+          and analyze phishing emails with high accuracy. Our platform combines
+          state-of-the-art natural language understanding, threat intelligence,
+          and comprehensive security analysis to protect users from email-based
+          attacks.
+        </p>
+        <p>
+          Built with transparency and user education in mind, DeepPhish not only
+          identifies potential threats but also explains why content is flagged,
+          helping users understand and recognize phishing attempts in the
+          future.
+        </p>
+      </div>
+
+      <div class="about-section">
+        <h2>🌟 Key Features</h2>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <strong>🧠 AI-Powered Classification</strong>
+            <p>
+              Uses advanced transformer models fine-tuned on phishing datasets
+              to accurately classify emails as legitimate or phishing.
+            </p>
+          </div>
+
+          <div class="feature-item">
+            <strong>📧 Email Parsing</strong>
+            <p>
+              Comprehensive EML file parsing with header analysis, body
+              extraction, and attachment handling.
+            </p>
+          </div>
+
+          <div class="feature-item">
+            <strong>🔗 URL & IP Analysis</strong>
+            <p>
+              Integration with VirusTotal API to check URLs and IP addresses
+              against threat intelligence databases.
+            </p>
+          </div>
+
+          <div class="feature-item">
+            <strong>📎 Attachment Scanning</strong>
+            <p>
+              Hash-based attachment scanning to detect known malicious files and
+              suspicious content.
+            </p>
+          </div>
+
+          <div class="feature-item">
+            <strong>📊 Risk Assessment</strong>
+            <p>
+              Multi-factor risk scoring that combines various indicators to
+              provide comprehensive threat evaluation.
+            </p>
+          </div>
+
+          <div class="feature-item">
+            <strong>💡 Explainable AI</strong>
+            <p>
+              Provides clear explanations for why content is flagged, including
+              language cues and feature importance.
+            </p>
+          </div>
+
+          <div class="feature-item">
+            <strong>🔒 Privacy-Focused</strong>
+            <p>
+              Local processing with optional storage. Your data stays under your
+              control.
+            </p>
+          </div>
+
+          <div class="feature-item">
+            <strong>📚 Educational Content</strong>
+            <p>
+              Comprehensive educational resources to help users understand and
+              protect against phishing attacks.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-section">
+        <h2>🛠️ Technology Stack</h2>
+
+        <div class="tech-stack">
+          <h4>Machine Learning & AI</h4>
+          <ul>
+            <li>PyTorch - Deep learning framework</li>
+            <li>Transformers (Hugging Face) - Pre-trained BERT models</li>
+            <li>Fine-tuned BERT model for phishing detection</li>
+            <li>Natural Language Understanding pipelines</li>
+          </ul>
+        </div>
+
+        <div class="tech-stack">
+          <h4>Web Framework & Backend</h4>
+          <ul>
+            <li>Flask - Python web framework</li>
+            <li>RESTful API architecture</li>
+            <li>JSON-based data exchange</li>
+            <li>File upload handling</li>
+          </ul>
+        </div>
+
+        <div class="tech-stack">
+          <h4>Security & Analysis</h4>
+          <ul>
+            <li>VirusTotal API integration</li>
+            <li>Email header parsing</li>
+            <li>File hash computation (SHA256, MD5)</li>
+            <li>URL extraction and validation</li>
+          </ul>
+        </div>
+
+        <div class="tech-stack">
+          <h4>Data Processing</h4>
+          <ul>
+            <li>Pandas - Data manipulation</li>
+            <li>NumPy - Numerical computing</li>
+            <li>Email parsing libraries (email, eml-parser)</li>
+            <li>JSON storage and retrieval</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="about-section">
+        <h2>🎯 How It Works</h2>
+
+        <h3>1. Email Input</h3>
+        <p>
+          Users can upload EML files, paste email content, or provide SMS/text
+          messages for analysis.
+        </p>
+
+        <h3>2. Multi-Modal Analysis</h3>
+        <p>DeepPhish performs several parallel analyses:</p>
+        <ul>
+          <li>
+            <strong>NLU Engine:</strong> Analyzes text content using AI models
+            to detect phishing language patterns
+          </li>
+          <li>
+            <strong>Email Processing:</strong> Parses email headers, body, and
+            metadata for suspicious indicators
+          </li>
+          <li>
+            <strong>External Tools:</strong> Checks URLs and IPs against
+            VirusTotal threat intelligence
+          </li>
+          <li>
+            <strong>Attachment Analysis:</strong> Scans file attachments for
+            known malware signatures
+          </li>
+        </ul>
+
+        <h3>3. Risk Scoring</h3>
+        <p>
+          The system combines all analysis results to generate a comprehensive
+          risk score:
+        </p>
+        <ul>
+          <li>
+            <strong>LOW:</strong> Content appears safe, no immediate threats
+            detected
+          </li>
+          <li>
+            <strong>MEDIUM:</strong> Some suspicious indicators present, use
+            caution
+          </li>
+          <li>
+            <strong>HIGH:</strong> Strong indicators of phishing, do not
+            interact
+          </li>
+        </ul>
+
+        <h3>4. Explainable Results</h3>
+        <p>
+          Results include detailed explanations of why content was flagged,
+          including:
+        </p>
+        <ul>
+          <li>Classification confidence scores</li>
+          <li>Detected language cues and suspicious phrases</li>
+          <li>URL and IP threat intelligence results</li>
+          <li>Actionable recommendations</li>
+        </ul>
+      </div>
+
+      <div class="about-section">
+        <h2>⚠️ Important Disclaimer</h2>
+        <p>
+          <strong
+            >DeepPhish is a tool to assist in identifying potential phishing
+            attempts, but it is not infallible.</strong
+          >
+        </p>
+        <ul>
+          <li>
+            No automated system can detect all phishing attempts with 100%
+            accuracy
+          </li>
+          <li>Always verify suspicious emails through independent channels</li>
+          <li>Use your judgment and follow security best practices</li>
+          <li>Do not rely solely on automated tools for security decisions</li>
+          <li>
+            When in doubt, delete suspicious emails or contact the organization
+            directly
+          </li>
+        </ul>
+        <p>
+          DeepPhish should be used as part of a comprehensive security strategy,
+          not as the sole method of protection.
+        </p>
+      </div>
+
+      <div class="about-section">
+        <h2>🔐 Privacy & Security</h2>
+        <p>We take privacy seriously:</p>
+        <ul>
+          <li>Email content is processed locally on your machine or server</li>
+          <li>Optional JSON storage for analysis results (user-controlled)</li>
+          <li>
+            No data is sent to third parties except for threat intelligence
+            lookups (VirusTotal)
+          </li>
+          <li>
+            All API keys and sensitive credentials should be stored securely
+          </li>
+          <li>Source code is available for review and auditing</li>
+        </ul>
+      </div>
+
+      <div class="about-section">
+        <h2>📝 Usage Guidelines</h2>
+        <p>To get the best results from DeepPhish:</p>
+        <ol>
+          <li>
+            <strong>Upload complete emails:</strong> Include headers when
+            possible for better analysis
+          </li>
+          <li>
+            <strong>Check URLs separately:</strong> Use the URL/IP analysis
+            feature for suspicious links
+          </li>
+          <li>
+            <strong>Review explanations:</strong> Pay attention to why content
+            is flagged
+          </li>
+          <li>
+            <strong>Combine with education:</strong> Learn from flagged patterns
+            to improve your own detection skills
+          </li>
+          <li>
+            <strong>Report false positives:</strong> Help improve the system by
+            understanding edge cases
+          </li>
+        </ol>
+      </div>
+
+      <div class="about-section">
+        <h2>🤝 Contributing & Support</h2>
+        <p>
+          DeepPhish is an open-source project. Contributions, bug reports, and
+          feature suggestions are welcome. Please refer to the project
+          repository for contribution guidelines.
+        </p>
+        <p>
+          For issues, questions, or support, please check the project
+          documentation or open an issue on the project repository.
+        </p>
+      </div>
+
+      <div class="about-section">
+        <h2>📄 License & Credits</h2>
+        <p>
+          This project uses various open-source libraries and pre-trained
+          models. Please refer to the requirements.txt and LICENSE files for
+          detailed information about dependencies and licensing.
+        </p>
+        <p>
+          Special thanks to the open-source community and the providers of the
+          phishing detection models and threat intelligence services that make
+          DeepPhish possible.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
