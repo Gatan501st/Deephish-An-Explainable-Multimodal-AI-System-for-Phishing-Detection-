@@ -1,27 +1,666 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Results</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-  <div class="container">
-    <h2>Analysis Results</h2>
-    <pre id="out">Loading...</pre>
-    <button onclick="window.location.href='/'">← Back</button>
-  </div>
-  <script>
-    async function fetchLast() {
-      try {
-        const r = await fetch('/api/last_result');
-        const j = await r.json();
-        document.getElementById('out').textContent = JSON.stringify(j, null, 2);
-      } catch(e) {
-        document.getElementById('out').textContent = 'failed to load last result';
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Analysis Results — DeepPhish</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <style>
+      .results-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
       }
-    }
-    fetchLast();
-  </script>
-</body>
+
+      .result-section {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+      }
+
+      .result-section h3 {
+        color: #333;
+        font-size: 1.5em;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+      }
+
+      .result-section h4 {
+        color: #555;
+        font-size: 1.2em;
+        margin-top: 20px;
+        margin-bottom: 10px;
+      }
+
+      .risk-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      .risk-high {
+        background: #fee;
+        color: #c53030;
+        border: 1px solid #c53030;
+      }
+
+      .risk-medium {
+        background: #fff5dc;
+        color: #b7791f;
+        border: 1px solid #b7791f;
+      }
+
+      .risk-low {
+        background: #f0f9ff;
+        color: #0369a1;
+        border: 1px solid #0369a1;
+      }
+
+      .nlu-result {
+        padding: 15px;
+        border-radius: 6px;
+        margin: 10px 0;
+      }
+
+      .nlu-phishing {
+        background: #fff5f5;
+        border-left: 4px solid #c53030;
+      }
+
+      .nlu-ham {
+        background: #f0f9ff;
+        border-left: 4px solid #0369a1;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 15px 0;
+      }
+
+      .info-item {
+        padding: 12px;
+        background: #f9f9f9;
+        border-radius: 4px;
+      }
+
+      .info-item strong {
+        display: block;
+        color: #666;
+        font-size: 0.85em;
+        margin-bottom: 5px;
+      }
+
+      .info-item span {
+        color: #333;
+        font-size: 1em;
+      }
+
+      .url-list,
+      .ip-list {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0;
+      }
+
+      .url-list li,
+      .ip-list li {
+        padding: 8px;
+        margin: 5px 0;
+        background: #f9f9f9;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 60px 20px;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #666;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error-message {
+        background: #fff5f5;
+        border: 1px solid #c53030;
+        border-radius: 6px;
+        padding: 15px;
+        color: #c53030;
+        margin: 20px 0;
+      }
+
+      .probability-bar {
+        height: 20px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 5px 0;
+        position: relative;
+      }
+
+      .probability-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+
+      .probability-ham {
+        background: #0369a1;
+      }
+
+      .probability-phishing {
+        background: #c53030;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="/" style="text-decoration: none; color: inherit">
+        <div class="logo-section">
+          <div class="shield-icon">DG</div>
+          <div class="logo-text">
+            <h1>DeepPhish</h1>
+            <p>Advanced Email Security Analysis</p>
+          </div>
+        </div>
+      </a>
+      <div class="header-actions">
+        <a href="/" class="header-btn">Home</a>
+        <a href="/education" class="header-btn">Education</a>
+        <a href="/about" class="header-btn">About</a>
+      </div>
+    </div>
+
+    <div class="results-container">
+      <div style="margin-bottom: 20px">
+        <a href="/" class="header-btn">← Back to Home</a>
+      </div>
+
+      <div id="loadingSection" class="loading">
+        <div class="spinner"></div>
+        <div>Loading analysis results...</div>
+      </div>
+
+      <div id="errorSection" style="display: none"></div>
+
+      <div id="resultsContent" style="display: none">
+        <!-- Results will be dynamically populated here -->
+      </div>
+    </div>
+
+    <script>
+      async function loadResults() {
+        try {
+          const response = await fetch("/api/last_result");
+          const data = await response.json();
+
+          document.getElementById("loadingSection").style.display = "none";
+
+          if (data.error || data.message) {
+            showError(data.error || data.message || "No results available");
+            return;
+          }
+
+          displayResults(data);
+        } catch (error) {
+          document.getElementById("loadingSection").style.display = "none";
+          showError("Failed to load results: " + error.message);
+        }
+      }
+
+      function showError(message) {
+        const errorSection = document.getElementById("errorSection");
+        errorSection.style.display = "block";
+        errorSection.innerHTML = `<div class="error-message">${message}</div>`;
+      }
+
+      function displayResults(data) {
+        const contentDiv = document.getElementById("resultsContent");
+        contentDiv.style.display = "block";
+
+        let html = "";
+
+        // Risk Assessment Section (at the top)
+        if (data.risk_assessment) {
+          const risk = data.risk_assessment;
+          const riskClass =
+            risk.risk_level === "HIGH"
+              ? "risk-high"
+              : risk.risk_level === "MEDIUM"
+              ? "risk-medium"
+              : "risk-low";
+
+          html += `
+          <div class="result-section">
+            <h3>🎯 Risk Assessment</h3>
+            <div class="risk-badge ${riskClass}">${risk.risk_level} RISK</div>
+            <p><strong>Risk Score:</strong> ${risk.risk_score} / 1.0</p>
+            ${
+              risk.risk_factors && risk.risk_factors.length > 0
+                ? `<h4>Risk Factors:</h4><ul>${risk.risk_factors
+                    .map((f) => `<li>${f}</li>`)
+                    .join("")}</ul>`
+                : ""
+            }
+            <div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 6px;">
+              <strong>Recommendation:</strong> ${
+                risk.recommendation || "No specific recommendation"
+              }
+            </div>
+          </div>`;
+        }
+
+        // NLU Analysis Section
+        if (data.nlu_analysis && !data.nlu_analysis.error) {
+          const nlu = data.nlu_analysis;
+          const isPhishing = nlu.is_phishing;
+          const nluClass = isPhishing ? "nlu-phishing" : "nlu-ham";
+          const probs = nlu.probabilities || {};
+
+          html += `
+          <div class="result-section">
+            <h3>🧠 NLU Analysis</h3>
+            <div class="nlu-result ${nluClass}">
+              <h4>Classification: ${
+                nlu.prediction || (isPhishing ? "PHISHING" : "HAM")
+              }</h4>
+              <p><strong>Confidence:</strong> ${(nlu.confidence * 100).toFixed(
+                2
+              )}%</p>
+              
+              <div style="margin-top: 15px;">
+                <strong>Probability Breakdown:</strong>
+                <div class="probability-bar">
+                  <div class="probability-fill probability-ham" style="width: ${
+                    (probs.ham || 0) * 100
+                  }%">
+                    ${
+                      (probs.ham || 0) * 100 > 10
+                        ? ((probs.ham || 0) * 100).toFixed(1) + "%"
+                        : ""
+                    }
+                  </div>
+                </div>
+                <small>HAM: ${((probs.ham || 0) * 100).toFixed(2)}%</small>
+                
+                <div class="probability-bar" style="margin-top: 10px;">
+                  <div class="probability-fill probability-phishing" style="width: ${
+                    (probs.phishing || 0) * 100
+                  }%">
+                    ${
+                      (probs.phishing || 0) * 100 > 10
+                        ? ((probs.phishing || 0) * 100).toFixed(1) + "%"
+                        : ""
+                    }
+                  </div>
+                </div>
+                <small>PHISHING: ${((probs.phishing || 0) * 100).toFixed(
+                  2
+                )}%</small>
+              </div>
+            </div>
+          </div>`;
+        }
+
+        // Email Parsing Section
+        if (data.email_parsing || data.parsed_eml) {
+          const emailData = data.email_parsing || {};
+          const headers = emailData.headers || data.parsed_eml?.header || {};
+
+          html += `
+          <div class="result-section">
+            <h3>📧 Email Details</h3>
+            <div class="info-grid">
+              ${
+                headers.from
+                  ? `<div class="info-item"><strong>From</strong><span>${headers.from}</span></div>`
+                  : ""
+              }
+              ${
+                headers.to
+                  ? `<div class="info-item"><strong>To</strong><span>${headers.to}</span></div>`
+                  : ""
+              }
+              ${
+                headers.subject
+                  ? `<div class="info-item"><strong>Subject</strong><span>${headers.subject}</span></div>`
+                  : ""
+              }
+              ${
+                headers.date
+                  ? `<div class="info-item"><strong>Date</strong><span>${headers.date}</span></div>`
+                  : ""
+              }
+              ${
+                emailData.attachments_count !== undefined
+                  ? `<div class="info-item"><strong>Attachments</strong><span>${emailData.attachments_count}</span></div>`
+                  : ""
+              }
+            </div>
+            ${
+              emailData.email_preview
+                ? `<div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 6px; font-family: monospace; font-size: 0.9em; white-space: pre-wrap;">${emailData.email_preview}</div>`
+                : ""
+            }
+          </div>`;
+        }
+
+        // URL & IP Extraction Section
+        if (data.url_extraction) {
+          const urlData = data.url_extraction;
+          html += `
+          <div class="result-section">
+            <h3>🔗 URLs & IPs Found</h3>
+            ${
+              urlData.urls_found && urlData.urls_found.length > 0
+                ? `
+              <h4>URLs (${urlData.urls_found.length}):</h4>
+              <ul class="url-list">
+                ${urlData.urls_found.map((url) => `<li>${url}</li>`).join("")}
+              </ul>
+            `
+                : "<p>No URLs found</p>"
+            }
+            
+            ${
+              urlData.ips_found && urlData.ips_found.length > 0
+                ? `
+              <h4>IP Addresses (${urlData.ips_found.length}):</h4>
+              <ul class="ip-list">
+                ${urlData.ips_found.map((ip) => `<li>${ip}</li>`).join("")}
+              </ul>
+            `
+                : "<p>No IP addresses found</p>"
+            }
+          </div>`;
+        }
+
+        // DNN Analysis Section (from full analysis or direct URL analysis)
+        if (data.dnn_analysis) {
+          // Check if it's from full analysis (has detailed_results array)
+          if (data.dnn_analysis.detailed_results) {
+            const dnn = data.dnn_analysis;
+            html += `
+          <div class="result-section">
+            <h3>🤖 DNN URL Analysis</h3>
+            <p><strong>URLs Analyzed:</strong> ${dnn.urls_analyzed} | 
+               <strong>Phishing Detected:</strong> ${dnn.phishing_detected}</p>
+            
+            ${dnn.detailed_results
+              .map((result, idx) => {
+                if (result.error) {
+                  return `<div style="padding: 15px; margin: 10px 0; background: #fff5f5; border-radius: 6px; border-left: 4px solid #c53030;">
+                  <strong>${result.url || "Unknown URL"}:</strong> Error - ${
+                    result.error
+                  }
+                </div>`;
+                }
+
+                const isPhishing = result.is_phishing;
+                const bgColor = isPhishing ? "#fff5f5" : "#f0f9ff";
+                const borderColor = isPhishing ? "#c53030" : "#0369a1";
+                const prediction =
+                  result.prediction || (isPhishing ? "PHISHING" : "LEGITIMATE");
+                const confidence = (result.confidence * 100).toFixed(2);
+
+                // Feature contributions
+                let featuresHtml = "";
+                if (
+                  result.top_phishing_indicators &&
+                  result.top_phishing_indicators.length > 0
+                ) {
+                  featuresHtml = `
+                  <div style="margin-top: 15px;">
+                    <h4 style="font-size: 1em; margin-bottom: 10px;">🔍 Top Phishing Indicators:</h4>
+                    <ul style="list-style: none; padding: 0;">
+                      ${result.top_phishing_indicators
+                        .map(
+                          (feat, fIdx) => `
+                        <li style="padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 4px; border-left: 3px solid ${
+                          isPhishing ? "#c53030" : "#0369a1"
+                        };">
+                          <strong>${feat.feature}:</strong> 
+                          <span style="color: ${
+                            feat.value > 0 ? "#c53030" : "#0369a1"
+                          };">${
+                            feat.value > 0 ? "⚠️ Present" : "✓ Not Present"
+                          }</span>
+                          <br>
+                          <small style="color: #666;">${
+                            feat.description
+                          }</small>
+                          ${
+                            feat.contribution > 0
+                              ? `<br><small style="color: #999;">Contribution: ${feat.contribution.toFixed(
+                                  3
+                                )}</small>`
+                              : ""
+                          }
+                        </li>
+                      `
+                        )
+                        .join("")}
+                    </ul>
+                  </div>
+                `;
+                }
+
+                return `
+                <div style="padding: 20px; margin: 15px 0; background: ${bgColor}; border-radius: 6px; border-left: 4px solid ${borderColor};">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="margin: 0; color: ${borderColor};">${prediction}</h4>
+                    <span style="font-weight: bold; color: ${borderColor};">${confidence}% confidence</span>
+                  </div>
+                  <p style="margin: 5px 0; font-family: monospace; font-size: 0.9em; word-break: break-all;">${
+                    result.url || "Unknown"
+                  }</p>
+                  
+                  ${
+                    result.probabilities
+                      ? `
+                    <div style="margin-top: 10px;">
+                      <small>Probabilities: Legitimate ${(
+                        result.probabilities.legitimate * 100
+                      ).toFixed(1)}% | 
+                             Phishing ${(
+                               result.probabilities.phishing * 100
+                             ).toFixed(1)}%</small>
+                    </div>
+                  `
+                      : ""
+                  }
+                  
+                  ${featuresHtml}
+                </div>
+              `;
+              })
+              .join("")}
+          </div>`;
+          } else {
+            // Single DNN analysis result (from /analyze/url route)
+            const dnn = data.dnn_analysis;
+            if (!dnn.error) {
+              const isPhishing = dnn.is_phishing;
+              const bgColor = isPhishing ? "#fff5f5" : "#f0f9ff";
+              const borderColor = isPhishing ? "#c53030" : "#0369a1";
+              const prediction =
+                dnn.prediction || (isPhishing ? "PHISHING" : "LEGITIMATE");
+              const confidence = (dnn.confidence * 100).toFixed(2);
+
+              let featuresHtml = "";
+              if (
+                dnn.top_phishing_indicators &&
+                dnn.top_phishing_indicators.length > 0
+              ) {
+                featuresHtml = `
+                  <div style="margin-top: 15px;">
+                    <h4 style="font-size: 1em; margin-bottom: 10px;">🔍 Top Phishing Indicators:</h4>
+                    <ul style="list-style: none; padding: 0;">
+                      ${dnn.top_phishing_indicators
+                        .map(
+                          (feat, fIdx) => `
+                        <li style="padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 4px; border-left: 3px solid ${
+                          isPhishing ? "#c53030" : "#0369a1"
+                        };">
+                          <strong>${feat.feature}:</strong> 
+                          <span style="color: ${
+                            feat.value > 0 ? "#c53030" : "#0369a1"
+                          };">${
+                            feat.value > 0 ? "⚠️ Present" : "✓ Not Present"
+                          }</span>
+                          <br>
+                          <small style="color: #666;">${
+                            feat.description
+                          }</small>
+                          ${
+                            feat.contribution > 0
+                              ? `<br><small style="color: #999;">Contribution: ${feat.contribution.toFixed(
+                                  3
+                                )}</small>`
+                              : ""
+                          }
+                        </li>
+                      `
+                        )
+                        .join("")}
+                    </ul>
+                  </div>
+                `;
+              }
+
+              html += `
+              <div class="result-section">
+                <h3>🤖 DNN URL Analysis</h3>
+                <div style="padding: 20px; margin: 15px 0; background: ${bgColor}; border-radius: 6px; border-left: 4px solid ${borderColor};">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="margin: 0; color: ${borderColor};">${prediction}</h4>
+                    <span style="font-weight: bold; color: ${borderColor};">${confidence}% confidence</span>
+                  </div>
+                  <p style="margin: 5px 0; font-family: monospace; font-size: 0.9em; word-break: break-all;">${
+                    dnn.url || data.url || "Unknown"
+                  }</p>
+                  
+                  ${
+                    dnn.probabilities
+                      ? `
+                    <div style="margin-top: 10px;">
+                      <small>Probabilities: Legitimate ${(
+                        dnn.probabilities.legitimate * 100
+                      ).toFixed(1)}% | 
+                             Phishing ${(
+                               dnn.probabilities.phishing * 100
+                             ).toFixed(1)}%</small>
+                    </div>
+                  `
+                      : ""
+                  }
+                  
+                  ${featuresHtml}
+                </div>
+              </div>`;
+            } else {
+              html += `
+              <div class="result-section">
+                <h3>🤖 DNN URL Analysis</h3>
+                <div style="padding: 15px; margin: 10px 0; background: #fff5f5; border-radius: 6px; border-left: 4px solid #c53030;">
+                  <strong>Error:</strong> ${dnn.error}
+                </div>
+              </div>`;
+            }
+          }
+        }
+
+        // External Checks Section
+        if (data.external_checks) {
+          const checks = data.external_checks;
+          if (checks.ip_reports && checks.ip_reports.length > 0) {
+            html += `
+            <div class="result-section">
+              <h3>🛡️ VirusTotal Reports</h3>
+              ${checks.ip_reports
+                .map((report, idx) => {
+                  if (report.error) {
+                    return `<div style="padding: 10px; margin: 5px 0; background: #fff5f5; border-radius: 4px;">
+                    <strong>${report.ip || report.url}:</strong> Error - ${
+                      report.error
+                    }
+                  </div>`;
+                  }
+                  const vtData = report.report?.data?.attributes;
+                  if (vtData) {
+                    const stats = vtData.last_analysis_stats || {};
+                    return `<div style="padding: 10px; margin: 5px 0; background: ${
+                      stats.malicious > 0 ? "#fff5f5" : "#f0f9ff"
+                    }; border-radius: 4px;">
+                    <strong>${report.ip || report.url}:</strong><br>
+                    Malicious: ${stats.malicious || 0} | Suspicious: ${
+                      stats.suspicious || 0
+                    } | Clean: ${stats.harmless || 0}
+                  </div>`;
+                  }
+                  return `<div style="padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 4px;">
+                   <strong>${
+                     report.ip || report.url
+                   }:</strong> No detailed report available
+                 </div>`;
+                })
+                .join("")}
+            </div>`;
+          }
+        }
+
+        // Raw Data Section (collapsible)
+        html += `
+        <div class="result-section">
+          <h3>📋 Raw Analysis Data</h3>
+          <details>
+            <summary style="cursor: pointer; padding: 10px; background: #f9f9f9; border-radius: 4px; margin-bottom: 10px;">
+              Click to view raw JSON data
+            </summary>
+            <pre style="background: #f9f9f9; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 0.85em;">${JSON.stringify(
+              data,
+              null,
+              2
+            )}</pre>
+          </details>
+        </div>`;
+
+        contentDiv.innerHTML = html;
+      }
+
+      // Load results on page load
+      loadResults();
+    </script>
+  </body>
 </html>
