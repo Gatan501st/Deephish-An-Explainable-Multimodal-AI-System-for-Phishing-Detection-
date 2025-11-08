@@ -163,14 +163,35 @@
         }
 
         .drop-zone.dragover {
-            border-color: #666;
+            border-color: #667eea;
             background: #f0f0f0;
+            border-style: solid;
+        }
+
+        .drop-zone.file-selected-zone {
+            border-color: #4caf50;
+            border-style: solid;
+            background: #f1f8f4;
         }
 
         .upload-icon {
-            font-size: 2.5em;
+            font-size: 1.2em;
+            font-weight: bold;
             margin-bottom: 15px;
             color: #999;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            border-radius: 50%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .upload-icon::before {
+            content: "UP";
         }
 
         .drop-zone p {
@@ -398,4 +419,59 @@
         .file-selected {
             color: #333;
             font-weight: 500;
+        }
+
+        .upload-error {
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            color: #c53030;
+            font-size: 0.9em;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .analyze-btn.processing {
+            position: relative;
+            color: transparent;
+        }
+
+        .analyze-btn.processing::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spinner 0.6s linear infinite;
+        }
+
+        @keyframes spinner {
+            to {
+                transform: rotate(360deg);
+            }
         }

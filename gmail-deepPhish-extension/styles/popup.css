@@ -1,0 +1,239 @@
+body {
+  width: 350px;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.popup-container {
+  background: #fff;
+}
+
+.popup-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.popup-header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.popup-header p {
+  margin: 5px 0 0 0;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.popup-content {
+  padding: 20px;
+}
+
+.status-section {
+  margin-bottom: 20px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 6px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ccc;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.connected {
+  background: #4caf50;
+}
+
+.status-dot.disconnected {
+  background: #f44336;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.1);
+  }
+}
+
+.status-dot.connected,
+.status-dot.disconnected {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.stats-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 6px;
+  background: #667eea;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.action-btn.secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.action-btn.secondary:hover {
+  background: #d0d0d0;
+}
+
+.results-section {
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top: none;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s ease-in-out 0.1s,
+              padding-top 0.3s ease-in-out,
+              margin-top 0.3s ease-in-out,
+              border-top 0.3s ease-in-out;
+}
+
+.results-section.visible {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  max-height: 500px;
+  opacity: 1;
+  overflow-y: auto;
+}
+
+.results-section h3 {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.result-card {
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 10px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result-card.phishing {
+  background: #ffebee;
+  border-left: 4px solid #f44336;
+}
+
+.result-card.safe {
+  background: #e8f5e9;
+  border-left: 4px solid #4caf50;
+}
+
+.result-card h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.result-card .confidence {
+  margin: 5px 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.result-card .concerns {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.result-card .concerns ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.result-card .concerns li {
+  margin: 5px 0;
+  color: #555;
+}
+
+.result-card .risk-assessment {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.result-card .risk-assessment strong {
+  color: #333;
+}
+
+.result-card .risk-assessment small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+}
+

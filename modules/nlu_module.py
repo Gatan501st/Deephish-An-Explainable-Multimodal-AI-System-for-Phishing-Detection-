@@ -8,6 +8,7 @@ import numpy as np
 from typing import Dict, List, Any, Tuple
 import os
 import sys
+import re
 
 # Try to import the original nlu library for fallback
 try:
@@ -19,7 +20,7 @@ except Exception:
 
 
 # =====================================
-# 🚀 Model and Tokenizer Loading
+#  Model and Tokenizer Loading
 # =====================================
 def load_phishing_model():
     """
@@ -48,7 +49,7 @@ _model, _tokenizer, _device = load_phishing_model()
 
 
 # =====================================
-# 🧠 Core Classification Functions
+# Core Classification Functions
 # =====================================
 def detect_phishing(texts: List[str]) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -79,6 +80,214 @@ def detect_phishing(texts: List[str]) -> Tuple[np.ndarray, np.ndarray]:
     predictions = torch.argmax(outputs.logits, dim=-1)
 
     return predictions.cpu().numpy(), probabilities.cpu().numpy()
+
+
+def get_word_importance(text: str) -> List[Dict[str, Any]]:
+    """
+    Get word-level importance scores for explainability
+    Uses word removal method to identify which words contribute most to phishing classification
+    Args:
+        text: Input text to analyze
+    Returns:
+        List of dictionaries with word, importance score, and position
+    """
+    if _model is None or _tokenizer is None:
+        return []
+
+    try:
+        # Get baseline prediction
+        predictions, probabilities = detect_phishing([text])
+        baseline_prob = float(probabilities[0][1])  # Phishing probability
+
+        # Split text into words (preserving punctuation)
+        words = re.findall(r"\b\w+\b|[^\w\s]", text)
+        word_importance = []
+
+        # Common phishing-related words/phrases for pattern matching
+        phishing_keywords = [
+            "urgent",
+            "verify",
+            "account",
+            "suspend",
+            "click",
+            "link",
+            "password",
+            "security",
+            "update",
+            "confirm",
+            "billing",
+            "payment",
+            "win",
+            "prize",
+            "free",
+            "limited",
+            "offer",
+            "expire",
+            "activate",
+            "login",
+            "validate",
+            "immediately",
+            "action",
+            "required",
+            "warning",
+            "alert",
+            "breach",
+        ]
+
+        # Test importance by removing each word and measuring impact
+        for i, word in enumerate(words):
+            if len(word) < 2:  # Skip very short words
+                continue
+
+            # Create text without this word
+            words_without = words[:i] + words[i + 1 :]
+            text_without = " ".join(words_without)
+
+            # Get prediction without this word
+            try:
+                pred_without, prob_without = detect_phishing([text_without])
+                prob_phishing_without = float(prob_without[0][1])
+
+                # Importance = how much removing this word changes phishing probability
+                importance = abs(baseline_prob - prob_phishing_without)
+            except:
+                importance = 0.0
+
+            # Check if it's a known phishing keyword
+            clean_word = word.lower().strip()
+            is_keyword = any(keyword in clean_word for keyword in phishing_keywords)
+
+            # Boost importance if it's a known keyword
+            if is_keyword:
+                importance *= 1.5
+
+            word_importance.append(
+                {
+                    "token": word,
+                    "clean_token": clean_word,
+                    "importance": importance,
+                    "position": i,
+                    "is_keyword": is_keyword,
+                }
+            )
+
+        # Sort by importance (highest first)
+        word_importance.sort(key=lambda x: x["importance"], reverse=True)
+
+        return word_importance[:50]  # Return top 50 most important words
+
+    except Exception as e:
+        print(f"Error computing word importance: {e}")
+        # Fallback: return keywords found in text
+        phishing_keywords = [
+            "urgent",
+            "verify",
+            "account",
+            "suspend",
+            "click",
+            "link",
+            "password",
+            "security",
+            "update",
+            "confirm",
+            "billing",
+            "payment",
+            "win",
+            "prize",
+        ]
+        words = text.lower().split()
+        found_keywords = []
+        for i, word in enumerate(words):
+            for keyword in phishing_keywords:
+                if keyword in word:
+                    found_keywords.append(
+                        {
+                            "token": word,
+                            "clean_token": word,
+                            "importance": 0.5,
+                            "position": i,
+                            "is_keyword": True,
+                        }
+                    )
+                    break
+        return found_keywords[:20]
+
+
+def highlight_suspicious_words(
+    text: str, word_importance: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Create highlighted text with suspicious words marked
+    Args:
+        text: Original text
+        word_importance: List of word importance dictionaries
+    Returns:
+        Dictionary with highlighted text and suspicious phrases
+    """
+    if not word_importance:
+        return {"highlighted_text": text, "suspicious_phrases": [], "top_concerns": []}
+
+    # Get top 10 most important words
+    top_words = word_importance[:10]
+
+    # Extract suspicious phrases (words with high importance)
+    suspicious_phrases = []
+    top_concerns = []
+
+    for word_data in top_words:
+        if word_data["importance"] > 0.1:  # Threshold for suspicious
+            token = word_data["clean_token"]
+            if len(token) > 2:  # Ignore very short tokens
+                suspicious_phrases.append(
+                    {
+                        "word": token,
+                        "importance": word_data["importance"],
+                        "is_keyword": word_data["is_keyword"],
+                    }
+                )
+
+    # Create educational explanations
+    for phrase in suspicious_phrases[:5]:  # Top 5 concerns
+        explanations = {
+            "urgent": "Words like 'urgent' create false urgency to rush decision-making",
+            "verify": "Phishing emails often ask you to 'verify' to steal credentials",
+            "account": "Legitimate services rarely ask you to verify account via email",
+            "suspend": "Threats of account suspension are common phishing tactics",
+            "click": "Phishing emails frequently ask you to click links or buttons",
+            "password": "Never enter your password via email links - this is always phishing",
+            "security": "Phishing emails exploit security concerns to gain trust",
+            "update": "Legitimate updates don't require clicking email links",
+            "confirm": "Confirmation requests via email are often phishing attempts",
+            "billing": "Billing-related emails asking for action are frequently scams",
+            "payment": "Payment-related urgency is a common phishing strategy",
+            "win": "Announcements about winning prizes are usually phishing",
+            "prize": "Prize notifications are common phishing tactics",
+            "free": "Free offers in emails are often phishing attempts",
+            "limited": "Limited-time offers create false urgency",
+            "expire": "Expiration threats are used to rush victims",
+            "activate": "Activation requests should be done on official websites",
+            "login": "Login requests via email are suspicious",
+            "validate": "Validation requests are often phishing attempts",
+        }
+
+        explanation = explanations.get(
+            phrase["word"],
+            f"'{phrase['word']}' is flagged as suspicious. Review this word carefully.",
+        )
+
+        top_concerns.append(
+            {
+                "word": phrase["word"],
+                "explanation": explanation,
+                "importance": phrase["importance"],
+            }
+        )
+
+    return {
+        "highlighted_text": text,  # Will be highlighted in frontend
+        "suspicious_phrases": suspicious_phrases,
+        "top_concerns": top_concerns,
+    }
 
 
 def classify_text(text: str) -> Dict[str, Any]:
@@ -136,15 +345,15 @@ def classify_text(text: str) -> Dict[str, Any]:
 
 
 # =====================================
-# 📧 Email Analysis Functions
+#  Email Analysis Functions
 # =====================================
 def analyze_email_content(email_text: str) -> Dict[str, Any]:
     """
-    Analyze email content for phishing detection
+    Analyze email content for phishing detection with explainability
     Args:
         email_text: Combined email text (subject + body)
     Returns:
-        Dictionary with analysis results
+        Dictionary with analysis results including suspicious word highlights
     """
     try:
         if not email_text.strip():
@@ -162,14 +371,30 @@ def analyze_email_content(email_text: str) -> Dict[str, Any]:
         is_phishing = pred == 1
         confidence = prob[1] if is_phishing else prob[0]
 
-        return {
+        # Get word importance for explainability
+        word_importance = get_word_importance(email_text)
+        highlighted = highlight_suspicious_words(email_text, word_importance)
+
+        result = {
             "is_phishing": is_phishing,
             "confidence": float(confidence),
             "prediction": "PHISHING" if is_phishing else "HAM",
             "probabilities": {"ham": float(prob[0]), "phishing": float(prob[1])},
             "content_preview": email_text[:500]
             + ("..." if len(email_text) > 500 else ""),
+            "explainability": {
+                "word_importance": word_importance[:20],  # Top 20 words
+                "suspicious_phrases": highlighted["suspicious_phrases"],
+                "top_concerns": highlighted["top_concerns"],
+                "educational_insights": (
+                    highlighted["top_concerns"][:5]
+                    if highlighted["top_concerns"]
+                    else []
+                ),
+            },
         }
+
+        return result
 
     except Exception as e:
         return {"error": f"Failed to analyze email content: {str(e)}"}
@@ -217,7 +442,7 @@ def analyze_comment(
 
 
 # =====================================
-# 🔍 Risk Assessment Functions
+#  Risk Assessment Functions
 # =====================================
 def assess_risk_level(confidence: float, is_phishing: bool) -> str:
     """
