@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepPhish Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="logo-section">
+            <div class="shield-icon">DP</div>
+            <div>
+              <h1>DeepPhish Dashboard</h1>
+              <p>Real-time Phishing Detection Analytics</p>
+            </div>
+          </div>
+          <nav class="header-nav">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/results" class="nav-link">Results</a>
+            <a href="/education" class="nav-link">Education</a>
+            <a href="/about" class="nav-link">About</a>
+          </nav>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="dashboard-main">
+        <!-- Stats Overview -->
+        <section class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">EM</div>
+            <div class="stat-info">
+              <h3 id="totalEmails">0</h3>
+              <p>Emails Analyzed</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">PH</div>
+            <div class="stat-info">
+              <h3 id="phishingDetected">0</h3>
+              <p>Phishing Detected</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">URL</div>
+            <div class="stat-info">
+              <h3 id="urlsScanned">0</h3>
+              <p>URLs Scanned</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">AT</div>
+            <div class="stat-info">
+              <h3 id="attachmentsScanned">0</h3>
+              <p>Attachments Scanned</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+          <div class="chart-container">
+            <h2>Detection Rate Over Time</h2>
+            <canvas id="detectionChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <h2>Threat Distribution</h2>
+            <canvas id="threatChart"></canvas>
+          </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="activity-section">
+          <h2>Recent Activity</h2>
+          <div class="activity-list" id="activityList">
+            <div class="activity-item">
+              <div class="activity-icon"></div>
+              <div class="activity-content">
+                <p>Loading recent activity...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Model Performance -->
+        <section class="performance-section">
+          <h2>Model Performance</h2>
+          <div class="performance-grid">
+            <div class="performance-card">
+              <h3>NLU Model</h3>
+              <div class="performance-metrics">
+                <div class="metric">
+                  <span class="metric-label">Accuracy</span>
+                  <span class="metric-value" id="nluAccuracy">--</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Precision</span>
+                  <span class="metric-value" id="nluPrecision">--</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Recall</span>
+                  <span class="metric-value" id="nluRecall">--</span>
+                </div>
+              </div>
+            </div>
+            <div class="performance-card">
+              <h3>DNN Model</h3>
+              <div class="performance-metrics">
+                <div class="metric">
+                  <span class="metric-label">Accuracy</span>
+                  <span class="metric-value" id="dnnAccuracy">--</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Precision</span>
+                  <span class="metric-value" id="dnnPrecision">--</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-label">Recall</span>
+                  <span class="metric-value" id="dnnRecall">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  </body>
+</html>

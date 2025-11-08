@@ -263,7 +263,7 @@ def load_or_train_model(
             f"Dataset not found at {data_path}. Cannot train model."
         )
 
-    print("📊 Training DNN model from data...")
+    print(" Training DNN model from data...")
     data = pd.read_csv(data_path)
 
     # Drop Domain column and prepare features
@@ -297,7 +297,7 @@ def load_or_train_model(
     train_score = _model.score(X_train_scaled, y_train)
     test_score = _model.score(X_test_scaled, y_test)
     print(
-        f"✅ Model trained - Train Accuracy: {train_score:.3f}, Test Accuracy: {test_score:.3f}"
+        f" Model trained - Train Accuracy: {train_score:.3f}, Test Accuracy: {test_score:.3f}"
     )
 
     # Save model
@@ -389,6 +389,13 @@ def predict_url(url: str) -> Dict[str, Any]:
             if data["value"] > 0 and data["contribution"] > 0
         ]
 
+        # Create user-friendly summary
+        summary_points = []
+        if phishing_features:
+            top_3 = phishing_features[:3]
+            for feat in top_3:
+                summary_points.append(feat["description"])
+
         return {
             "is_phishing": bool(prediction == 1),
             "prediction": "PHISHING" if prediction == 1 else "LEGITIMATE",
@@ -399,10 +406,27 @@ def predict_url(url: str) -> Dict[str, Any]:
                 "legitimate": float(probabilities[0]),
                 "phishing": float(probabilities[1]),
             },
-            "features": features,
-            "feature_contributions": feature_contributions,
-            "top_phishing_indicators": phishing_features[:10],  # Top 10
             "url": url,
+            # Simplified output for user-friendly display
+            "summary": {
+                "risk_level": (
+                    "HIGH"
+                    if (prediction == 1 and probabilities[1] > 0.7)
+                    else (
+                        "MEDIUM"
+                        if (prediction == 1 and probabilities[1] > 0.5)
+                        else "LOW"
+                    )
+                ),
+                "key_concerns": summary_points[:5],  # Top 5 concerns in plain language
+                "top_indicators_count": len(phishing_features),
+            },
+            # Detailed data (for advanced users)
+            "detailed": {
+                "features": features,
+                "feature_contributions": feature_contributions,
+                "top_phishing_indicators": phishing_features[:10],
+            },
         }
 
     except Exception as e:

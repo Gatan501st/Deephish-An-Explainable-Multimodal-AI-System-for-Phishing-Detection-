@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Deepphish — Email Analyzer</title>
+    <title>DeepPhish — Email Analyzer</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
@@ -15,16 +15,49 @@
         <div class="logo-section">
           <div class="shield-icon">DG</div>
           <div class="logo-text">
-            <h1>Deepphish</h1>
+            <h1>DeepPhish</h1>
             <p>Advanced Email Security Analysis</p>
           </div>
         </div>
       </a>
       <div class="header-actions">
+        <a href="/" class="header-btn">Home</a>
         <a href="/education" class="header-btn">Education</a>
         <a href="/about" class="header-btn">About</a>
-        <button class="header-btn" id="btnOpenUpload">Upload</button>
-        <button class="header-btn" id="btnOpenResults">Results</button>
+        <span id="authButtons">
+          <a
+            href="/login"
+            class="header-btn"
+            id="loginLink"
+            style="display: none"
+            >Login</a
+          >
+          <a
+            href="/signup"
+            class="header-btn"
+            id="signupLink"
+            style="display: none"
+            >Sign Up</a
+          >
+          <span id="userInfo" style="display: none">
+            <span
+              id="userEmailDisplay"
+              style="margin-right: 10px; color: #666"
+            ></span>
+            <button
+              onclick="logout()"
+              class="header-btn"
+              style="
+                background: #c53030;
+                color: white;
+                border: none;
+                cursor: pointer;
+              "
+            >
+              Logout
+            </button>
+          </span>
+        </span>
       </div>
     </div>
 
@@ -42,7 +75,7 @@
         <!-- Email File Section -->
         <div class="upload-section">
           <div class="section-header">
-            <span>↑</span>
+            <span></span>
             <h3>Upload Email File</h3>
           </div>
           <p class="section-description">
@@ -50,16 +83,30 @@
           </p>
 
           <label for="emailFile" class="drop-zone" id="dropZone">
-            <div class="upload-icon">↑</div>
+            <div class="upload-icon"></div>
             <p id="dropZoneText">Drop email files here or click to browse</p>
-            <small>Supports .eml and .msg formats</small>
+            <small>Supports .eml and .msg formats (Max 50MB)</small>
           </label>
           <input type="file" id="emailFile" accept=".eml,.msg" />
+          <button
+            type="button"
+            id="clearFileBtn"
+            style="
+              display: none;
+              margin-top: 10px;
+              padding: 8px 16px;
+              background: #f5f5f5;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 0.9em;
+            "
+            onclick="resetFileInput()"
+          >
+            Clear File
+          </button>
 
-          <div style="margin-top: 18px; display: flex; gap: 10px">
-            <button class="analyze-btn" id="parseEmlBtn" disabled>
-              Parse & Analyze
-            </button>
+          <div style="margin-top: 18px">
             <button class="analyze-btn" id="fullAnalysisBtn" disabled>
               Full Analysis
             </button>
@@ -165,11 +212,55 @@
     </div>
 
     <script>
+      // Check authentication status
+      function checkAuthStatus() {
+        const token = localStorage.getItem("access_token");
+        const loginLink = document.getElementById("loginLink");
+        const signupLink = document.getElementById("signupLink");
+        const userInfo = document.getElementById("userInfo");
+        const userEmailDisplay = document.getElementById("userEmailDisplay");
+
+        if (token) {
+          // User is logged in
+          loginLink.style.display = "none";
+          signupLink.style.display = "none";
+          userInfo.style.display = "inline-block";
+          const email = localStorage.getItem("user_email");
+          if (email) {
+            userEmailDisplay.textContent = email;
+          }
+        } else {
+          // User is not logged in
+          loginLink.style.display = "inline-block";
+          signupLink.style.display = "inline-block";
+          userInfo.style.display = "none";
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user_email");
+        localStorage.removeItem("user_id");
+        checkAuthStatus();
+        window.location.reload();
+      }
+
+      // Check on page load
+      checkAuthStatus();
+
+      // Also check if token was set from login page
+      window.addEventListener("storage", (e) => {
+        if (e.key === "access_token") {
+          checkAuthStatus();
+        }
+      });
+    </script>
+    <script>
       // Elements
       const emailFile = document.getElementById("emailFile");
       const dropZone = document.getElementById("dropZone");
       const dropZoneText = document.getElementById("dropZoneText");
-      const parseEmlBtn = document.getElementById("parseEmlBtn");
       const fullAnalysisBtn = document.getElementById("fullAnalysisBtn");
 
       const emailContent = document.getElementById("emailContent");
@@ -193,12 +284,28 @@
 
       // Helpers
       function enableIfInputs() {
-        parseEmlBtn.disabled = !emailFile.files.length;
         fullAnalysisBtn.disabled = !emailFile.files.length;
         storeJsonBtn.disabled = !emailContent.value.trim();
         nluBtn.disabled = !emailContent.value.trim();
         analyzeUrlBtn.disabled = !urlIpContent.value.trim();
         scanAttachmentBtn.disabled = !attachFile.files.length;
+      }
+
+      // Get auth token from localStorage
+      function getAuthToken() {
+        return localStorage.getItem("access_token");
+      }
+
+      // Get headers with auth token if available
+      function getAuthHeaders() {
+        const headers = {
+          "Content-Type": "application/json",
+        };
+        const token = getAuthToken();
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        return headers;
       }
 
       function createResultCard(title, obj, error = false) {
@@ -240,11 +347,66 @@
         redirectToResults = false
       ) {
         showLoading(title);
+
+        // Hide any previous errors
+        const errorDiv = document.getElementById("upload-error");
+        if (errorDiv) errorDiv.style.display = "none";
+
+        let timeoutId;
         try {
-          const resp = await fetch(url, options);
-          const json = await resp.json();
+          // Add timeout to prevent hanging
+          const controller = new AbortController();
+          timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
+
+          // Add auth token to headers if available
+          const token = getAuthToken();
+          const headers = { ...options.headers };
+
+          // For FormData requests, don't set Content-Type (browser will set it with boundary)
+          const isFormData = options.body instanceof FormData;
+          if (!isFormData && !headers["Content-Type"]) {
+            headers["Content-Type"] = "application/json";
+          }
+
+          // Add Authorization header if token exists
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+
+          const resp = await fetch(url, {
+            ...options,
+            headers: headers,
+            signal: controller.signal,
+          });
+
+          if (timeoutId) clearTimeout(timeoutId);
+
+          // Check if response is OK before trying to parse JSON
+          let json;
+          try {
+            json = await resp.json();
+          } catch (parseError) {
+            removeLoading();
+            throw new Error(
+              "Server returned invalid response. Please try again."
+            );
+          }
+
           removeLoading();
+
           if (!resp.ok) {
+            const errorMsg =
+              json.error || json.message || "Unknown error occurred";
+
+            // Check if it's an authentication error
+            if (resp.status === 401) {
+              showError(
+                `Authentication required. Please <a href="/login" style="color: #667eea; text-decoration: underline;">login</a> to use this feature.`
+              );
+            } else {
+              showError(`Upload failed: ${errorMsg}`);
+            }
+
             createResultCard(title + " — error", json, true);
             lastResult = json;
             return json;
@@ -255,7 +417,10 @@
 
           // If redirect flag is set, go to results page
           if (redirectToResults) {
-            window.location.href = "/results";
+            // Small delay to ensure data is saved
+            setTimeout(() => {
+              window.location.href = "/results";
+            }, 100);
             return json;
           }
 
@@ -263,77 +428,245 @@
           createResultCard(title + " — result", json, false);
           return json;
         } catch (err) {
+          if (timeoutId) clearTimeout(timeoutId);
           removeLoading();
+
+          let errorMessage = err.message;
+          if (err.name === "AbortError") {
+            errorMessage =
+              "Request timed out. Please try again with a smaller file.";
+          } else if (
+            err.name === "TypeError" &&
+            err.message.includes("fetch")
+          ) {
+            errorMessage =
+              "Network error. Please check your connection and try again.";
+          }
+
+          showError(errorMessage);
           createResultCard(
             title + " — exception",
-            { error: err.message },
+            { error: errorMessage },
             true
           );
-          lastResult = { error: err.message };
+          lastResult = { error: errorMessage };
           return lastResult;
         }
       }
 
       // Event wiring
-      emailFile.addEventListener("change", enableIfInputs);
       attachFile.addEventListener("change", enableIfInputs);
       emailContent.addEventListener("input", enableIfInputs);
       urlIpContent.addEventListener("input", enableIfInputs);
 
+      // File input change handler (consolidated)
+      emailFile.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleFileSelection(file);
+        } else {
+          resetFileInput();
+        }
+        enableIfInputs();
+      });
+
       // Drop zone handlers
-      dropZone.addEventListener("click", () => emailFile.click());
+      dropZone.addEventListener("click", (e) => {
+        e.preventDefault();
+        emailFile.click();
+      });
+
       dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
+        e.stopPropagation();
         dropZone.classList.add("dragover");
       });
-      dropZone.addEventListener("dragleave", () =>
-        dropZone.classList.remove("dragover")
-      );
+
+      dropZone.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove("dragover");
+      });
+
       dropZone.addEventListener("drop", (e) => {
         e.preventDefault();
+        e.stopPropagation();
         dropZone.classList.remove("dragover");
-        const file = e.dataTransfer.files[0];
-        if (
-          file &&
-          (file.name.endsWith(".eml") || file.name.endsWith(".msg"))
-        ) {
-          emailFile.files = e.dataTransfer.files;
-          dropZoneText.innerHTML = `<span class="file-selected">✓ ${
-            file.name
-          } (${Math.round(file.size / 1024)} KB)</span>`;
-          enableIfInputs();
-        } else {
-          alert("Please drop a valid .eml or .msg file");
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          const file = files[0];
+          if (
+            file &&
+            (file.name.endsWith(".eml") || file.name.endsWith(".msg"))
+          ) {
+            // Create a new FileList-like object using DataTransfer
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            emailFile.files = dataTransfer.files;
+            handleFileSelection(file);
+          } else {
+            showError("Please drop a valid .eml or .msg file");
+          }
         }
       });
 
-      // Buttons
-      parseEmlBtn.addEventListener("click", async () => {
-        if (!emailFile.files.length) return;
-        const form = new FormData();
-        form.append("file", emailFile.files[0]);
-        await handleFetch(
-          "/parse/eml",
-          { method: "POST", body: form },
-          "EML Parse",
-          true // Redirect to results page
-        );
-      });
+      // Handle file selection with proper feedback
+      function handleFileSelection(file) {
+        if (!file) return;
 
+        // Validate file type
+        if (!file.name.endsWith(".eml") && !file.name.endsWith(".msg")) {
+          showError("Invalid file type. Please select a .eml or .msg file.");
+          resetFileInput();
+          return;
+        }
+
+        // Validate file size (limit to 50MB)
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        if (file.size > maxSize) {
+          showError(
+            `File too large. Maximum size is 50MB. Your file is ${Math.round(
+              file.size / 1024 / 1024
+            )}MB.`
+          );
+          resetFileInput();
+          return;
+        }
+
+        // Update UI
+        dropZoneText.innerHTML = `<span class="file-selected">File selected: ${
+          file.name
+        } (${formatFileSize(file.size)})</span>`;
+        dropZone.classList.add("file-selected-zone");
+
+        // Show clear button
+        const clearBtn = document.getElementById("clearFileBtn");
+        if (clearBtn) clearBtn.style.display = "block";
+
+        // Enable buttons
+        enableIfInputs();
+      }
+
+      function resetFileInput() {
+        emailFile.value = "";
+        dropZoneText.textContent = "Drop email files here or click to browse";
+        dropZone.classList.remove("file-selected-zone");
+        const clearBtn = document.getElementById("clearFileBtn");
+        if (clearBtn) clearBtn.style.display = "none";
+        enableIfInputs();
+      }
+
+      // Make resetFileInput available globally for the clear button
+      window.resetFileInput = resetFileInput;
+
+      function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
+        return Math.round((bytes / (1024 * 1024)) * 10) / 10 + " MB";
+      }
+
+      function showError(message) {
+        // Create or update error message
+        let errorDiv = document.getElementById("upload-error");
+        if (!errorDiv) {
+          errorDiv = document.createElement("div");
+          errorDiv.id = "upload-error";
+          errorDiv.className = "upload-error";
+          // Try to find a good place to insert the error (after upload section or at top of container)
+          const uploadSection = document.querySelector(".upload-section");
+          if (uploadSection && uploadSection.parentElement) {
+            uploadSection.parentElement.insertBefore(
+              errorDiv,
+              uploadSection.nextSibling
+            );
+          } else if (dropZone && dropZone.parentElement) {
+            dropZone.parentElement.insertBefore(errorDiv, dropZone.nextSibling);
+          } else {
+            document
+              .querySelector(".container")
+              .insertBefore(
+                errorDiv,
+                document.querySelector(".container").firstChild
+              );
+          }
+        }
+        errorDiv.innerHTML = message; // Use innerHTML to support links
+        errorDiv.style.display = "block";
+
+        // Auto-hide after 8 seconds (longer for auth errors with links)
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 8000);
+      }
+
+      // Track if upload is in progress to prevent duplicate submissions
+      let isUploading = false;
+
+      // Full Analysis button with authentication
       fullAnalysisBtn.addEventListener("click", async () => {
-        if (!emailFile.files.length) return;
-        const form = new FormData();
-        form.append("file", emailFile.files[0]);
-        await handleFetch(
-          "/analyze/full",
-          { method: "POST", body: form },
-          "Full Analysis",
-          true // Redirect to results page
-        );
+        if (isUploading) {
+          showError("Please wait for the current upload to complete");
+          return;
+        }
+
+        if (!emailFile.files.length) {
+          showError("Please select a file first");
+          return;
+        }
+
+        // Check authentication
+        const token = getAuthToken();
+        if (!token) {
+          showError(
+            'Please <a href="/login" style="color: #667eea; text-decoration: underline;">login</a> to use Full Analysis.'
+          );
+          return;
+        }
+
+        isUploading = true;
+
+        // Disable button during upload
+        fullAnalysisBtn.disabled = true;
+        const originalText = fullAnalysisBtn.textContent;
+        fullAnalysisBtn.textContent = "Processing...";
+        fullAnalysisBtn.classList.add("processing");
+
+        try {
+          const form = new FormData();
+          form.append("file", emailFile.files[0]);
+          await handleFetch(
+            "/analyze/full",
+            { method: "POST", body: form },
+            "Full Analysis",
+            true // Redirect to results page
+          );
+        } catch (error) {
+          showError("Upload failed: " + error.message);
+          // Don't redirect on error, allow user to retry
+        } finally {
+          // Only re-enable if not redirecting
+          if (!window.location.pathname.includes("/results")) {
+            isUploading = false;
+            fullAnalysisBtn.disabled = false;
+            fullAnalysisBtn.textContent = originalText;
+            fullAnalysisBtn.classList.remove("processing");
+          }
+        }
       });
 
       scanAttachmentBtn.addEventListener("click", async () => {
         if (!attachFile.files.length) return;
+
+        // Check authentication
+        const token = getAuthToken();
+        if (!token) {
+          showError(
+            'Please <a href="/login" style="color: #667eea; text-decoration: underline;">login</a> to scan attachments.'
+          );
+          return;
+        }
+
         const form = new FormData();
         form.append("file", attachFile.files[0]);
         await handleFetch(
@@ -348,6 +681,16 @@
           .split("\n")
           .map((l) => l.trim())
           .filter(Boolean);
+
+        // Check authentication
+        const token = getAuthToken();
+        if (!token) {
+          showError(
+            'Please <a href="/login" style="color: #667eea; text-decoration: underline;">login</a> to analyze URLs.'
+          );
+          return;
+        }
+
         for (const item of lines) {
           // decide if IP or URL
           const payload = {};
@@ -361,7 +704,6 @@
             "/analyze/url",
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             },
             `URL/IP Analysis: ${item}`,
@@ -389,11 +731,20 @@
       nluBtn.addEventListener("click", async () => {
         const content = emailContent.value.trim();
         if (!content) return;
+
+        // Check authentication
+        const token = getAuthToken();
+        if (!token) {
+          showError(
+            'Please <a href="/login" style="color: #667eea; text-decoration: underline;">login</a> to use NLU Analysis.'
+          );
+          return;
+        }
+
         await handleFetch(
           "/analyze/nlu",
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: content }),
           },
           "NLU Analysis",
@@ -415,7 +766,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "deepphish_last_result.json";
+        a.download = "deepPhish_last_result.json";
         document.body.appendChild(a);
         a.click();
         a.remove();

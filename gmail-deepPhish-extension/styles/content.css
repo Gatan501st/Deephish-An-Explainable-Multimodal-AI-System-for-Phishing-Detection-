@@ -1,0 +1,112 @@
+/* DeepPhish security badge styles */
+
+.deepphish-badge {
+  margin: 10px 0;
+  padding: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.deepphish-badge-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.deepphish-badge-content.phishing {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+}
+
+.deepphish-badge-content.safe {
+  background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+  color: white;
+}
+
+.deepphish-icon {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.deepphish-text {
+  flex: 1;
+}
+
+.deepphish-confidence {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Suspicious URL highlighting */
+
+.deepphish-suspicious-url {
+  background: #ffebee;
+  color: #c62828;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border-bottom: 2px solid #f44336;
+  font-weight: 600;
+  cursor: help;
+  text-decoration: none !important;
+}
+
+.deepphish-suspicious-url:hover {
+  background: #ffcdd2;
+  border-bottom-color: #d32f2f;
+}
+
+.deepphish-highlight {
+  background-color: rgba(231, 76, 60, 0.4);
+  padding: 2px 4px;
+  border-radius: 3px;
+  cursor: help;
+  transition: background-color 0.2s;
+}
+
+.deepphish-highlight:hover {
+  background-color: rgba(231, 76, 60, 0.6);
+}
+
+.deepphish-concerns {
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff9e6;
+  border-left: 3px solid #f39c12;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.deepphish-concerns ul {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
+
+.deepphish-concerns li {
+  margin: 5px 0;
+  color: #555;
+}
+
+.deepphish-badge-content.error {
+  background-color: #fff5f5;
+  border-color: #c53030;
+  color: #c53030;
+}
+
+.deepphish-badge-content.error a {
+  color: #c53030;
+  text-decoration: underline;
+}
+

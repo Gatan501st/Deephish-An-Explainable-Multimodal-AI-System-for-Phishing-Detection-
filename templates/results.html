@@ -182,6 +182,45 @@
       .probability-phishing {
         background: #c53030;
       }
+
+      .vt-stat-card {
+        padding: 15px;
+        background: white;
+        border-radius: 6px;
+        text-align: center;
+        border: 2px solid;
+      }
+
+      .vt-stat-number {
+        font-size: 2em;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .vt-stat-label {
+        font-size: 0.9em;
+        color: #666;
+      }
+
+      .security-measures {
+        margin-top: 20px;
+        padding: 20px;
+        background: #e8f4f8;
+        border-radius: 8px;
+        border-left: 4px solid #0369a1;
+      }
+
+      .security-measures h4 {
+        margin-top: 0;
+        color: #0369a1;
+      }
+
+      .security-measures ul {
+        margin: 10px 0;
+        padding-left: 20px;
+        color: #555;
+        line-height: 1.8;
+      }
     </style>
   </head>
   <body>
@@ -263,7 +302,7 @@
 
           html += `
           <div class="result-section">
-            <h3>🎯 Risk Assessment</h3>
+            <h3>Risk Assessment</h3>
             <div class="risk-badge ${riskClass}">${risk.risk_level} RISK</div>
             <p><strong>Risk Score:</strong> ${risk.risk_score} / 1.0</p>
             ${
@@ -281,16 +320,17 @@
           </div>`;
         }
 
-        // NLU Analysis Section
+        // NLU Analysis Section with Explainability
         if (data.nlu_analysis && !data.nlu_analysis.error) {
           const nlu = data.nlu_analysis;
           const isPhishing = nlu.is_phishing;
           const nluClass = isPhishing ? "nlu-phishing" : "nlu-ham";
           const probs = nlu.probabilities || {};
+          const explainability = nlu.explainability || {};
 
           html += `
           <div class="result-section">
-            <h3>🧠 NLU Analysis</h3>
+            <h3>NLU Text Analysis</h3>
             <div class="nlu-result ${nluClass}">
               <h4>Classification: ${
                 nlu.prediction || (isPhishing ? "PHISHING" : "HAM")
@@ -329,6 +369,80 @@
                   2
                 )}%</small>
               </div>
+              
+              ${
+                (explainability.top_concerns &&
+                  explainability.top_concerns.length > 0) ||
+                (explainability.suspicious_phrases &&
+                  explainability.suspicious_phrases.length > 0)
+                  ? `
+              <div style="margin-top: 20px; padding: 15px; background: #fff9e6; border-radius: 6px; border-left: 4px solid #f39c12;">
+                <h4 style="margin-top: 0; color: #d68910;">Suspicious Words Detected:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                  ${(explainability.top_concerns || [])
+                    .map(
+                      (concern) => `
+                    <li style="margin: 8px 0;">
+                      <strong style="color: #c0392b;">"${
+                        concern.word || concern.token || "Unknown"
+                      }"</strong> - 
+                      <span style="color: #555;">${
+                        concern.explanation ||
+                        "This word is flagged as suspicious"
+                      }</span>
+                      ${
+                        concern.importance
+                          ? `<span style="color: #999; font-size: 0.9em;"> (Importance: ${(
+                              concern.importance * 100
+                            ).toFixed(1)}%)</span>`
+                          : ""
+                      }
+                    </li>`
+                    )
+                    .join("")}
+                  ${
+                    (!explainability.top_concerns ||
+                      explainability.top_concerns.length === 0) &&
+                    explainability.suspicious_phrases
+                      ? explainability.suspicious_phrases
+                          .slice(0, 10)
+                          .map(
+                            (phrase) => `
+                    <li style="margin: 8px 0;">
+                      <strong style="color: #c0392b;">"${
+                        phrase.word || phrase.token || "Unknown"
+                      }"</strong> - 
+                      <span style="color: #555;">This word is flagged as suspicious</span>
+                      ${
+                        phrase.importance
+                          ? `<span style="color: #999; font-size: 0.9em;"> (Importance: ${(
+                              phrase.importance * 100
+                            ).toFixed(1)}%)</span>`
+                          : ""
+                      }
+                    </li>`
+                          )
+                          .join("")
+                      : ""
+                  }
+                </ul>
+                ${
+                  (!explainability.top_concerns ||
+                    explainability.top_concerns.length === 0) &&
+                  (!explainability.suspicious_phrases ||
+                    explainability.suspicious_phrases.length === 0)
+                    ? `<p style="color: #666; font-style: italic;">No specific suspicious words detected, but the overall content pattern suggests phishing.</p>`
+                    : ""
+                }
+              </div>`
+                  : isPhishing
+                  ? `
+              <div style="margin-top: 20px; padding: 15px; background: #fff9e6; border-radius: 6px; border-left: 4px solid #f39c12;">
+                <h4 style="margin-top: 0; color: #d68910;">Analysis Note:</h4>
+                <p style="color: #555;">This content was classified as phishing, but no specific suspicious words were identified. The detection is based on overall text patterns and structure.</p>
+              </div>`
+                  : ""
+              }
             </div>
           </div>`;
         }
@@ -340,7 +454,7 @@
 
           html += `
           <div class="result-section">
-            <h3>📧 Email Details</h3>
+            <h3>Email Details</h3>
             <div class="info-grid">
               ${
                 headers.from
@@ -381,7 +495,7 @@
           const urlData = data.url_extraction;
           html += `
           <div class="result-section">
-            <h3>🔗 URLs & IPs Found</h3>
+            <h3>URLs & IPs Found</h3>
             ${
               urlData.urls_found && urlData.urls_found.length > 0
                 ? `
@@ -413,7 +527,7 @@
             const dnn = data.dnn_analysis;
             html += `
           <div class="result-section">
-            <h3>🤖 DNN URL Analysis</h3>
+            <h3>DNN URL Analysis</h3>
             <p><strong>URLs Analyzed:</strong> ${dnn.urls_analyzed} | 
                <strong>Phishing Detected:</strong> ${dnn.phishing_detected}</p>
             
@@ -442,7 +556,7 @@
                 ) {
                   featuresHtml = `
                   <div style="margin-top: 15px;">
-                    <h4 style="font-size: 1em; margin-bottom: 10px;">🔍 Top Phishing Indicators:</h4>
+                    <h4 style="font-size: 1em; margin-bottom: 10px;"> Top Phishing Indicators:</h4>
                     <ul style="list-style: none; padding: 0;">
                       ${result.top_phishing_indicators
                         .map(
@@ -454,7 +568,7 @@
                           <span style="color: ${
                             feat.value > 0 ? "#c53030" : "#0369a1"
                           };">${
-                            feat.value > 0 ? "⚠️ Present" : "✓ Not Present"
+                            feat.value > 0 ? " Present" : "Not Present"
                           }</span>
                           <br>
                           <small style="color: #666;">${
@@ -518,38 +632,65 @@
                 dnn.prediction || (isPhishing ? "PHISHING" : "LEGITIMATE");
               const confidence = (dnn.confidence * 100).toFixed(2);
 
+              // Use simplified summary if available, otherwise fall back to detailed
               let featuresHtml = "";
               if (
+                dnn.summary &&
+                dnn.summary.key_concerns &&
+                dnn.summary.key_concerns.length > 0
+              ) {
+                // User-friendly summary
+                featuresHtml = `
+                  <div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 6px;">
+                    <h4 style="font-size: 1em; margin-bottom: 10px; color: ${borderColor};">Key Concerns:</h4>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                      ${dnn.summary.key_concerns
+                        .map(
+                          (concern) => `
+                        <li style="padding: 10px; margin: 8px 0; background: white; border-radius: 4px; border-left: 3px solid ${borderColor};">
+                          <span style="color: #555;">${concern}</span>
+                        </li>
+                      `
+                        )
+                        .join("")}
+                    </ul>
+                    ${
+                      dnn.summary.risk_level
+                        ? `
+                    <div style="margin-top: 12px; padding: 10px; background: ${
+                      dnn.summary.risk_level === "HIGH"
+                        ? "#fff5f5"
+                        : dnn.summary.risk_level === "MEDIUM"
+                        ? "#fff9e6"
+                        : "#f0f9ff"
+                    }; border-radius: 4px;">
+                      <strong>Risk Level:</strong> <span style="color: ${borderColor};">${
+                            dnn.summary.risk_level
+                          }</span>
+                    </div>
+                    `
+                        : ""
+                    }
+                  </div>
+                `;
+              } else if (
                 dnn.top_phishing_indicators &&
                 dnn.top_phishing_indicators.length > 0
               ) {
+                // Fallback to detailed indicators
                 featuresHtml = `
                   <div style="margin-top: 15px;">
-                    <h4 style="font-size: 1em; margin-bottom: 10px;">🔍 Top Phishing Indicators:</h4>
+                    <h4 style="font-size: 1em; margin-bottom: 10px;"> Top Phishing Indicators:</h4>
                     <ul style="list-style: none; padding: 0;">
                       ${dnn.top_phishing_indicators
+                        .slice(0, 5)
                         .map(
-                          (feat, fIdx) => `
+                          (feat) => `
                         <li style="padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 4px; border-left: 3px solid ${
                           isPhishing ? "#c53030" : "#0369a1"
                         };">
                           <strong>${feat.feature}:</strong> 
-                          <span style="color: ${
-                            feat.value > 0 ? "#c53030" : "#0369a1"
-                          };">${
-                            feat.value > 0 ? "⚠️ Present" : "✓ Not Present"
-                          }</span>
-                          <br>
-                          <small style="color: #666;">${
-                            feat.description
-                          }</small>
-                          ${
-                            feat.contribution > 0
-                              ? `<br><small style="color: #999;">Contribution: ${feat.contribution.toFixed(
-                                  3
-                                )}</small>`
-                              : ""
-                          }
+                          <span style="color: #666;">${feat.description}</span>
                         </li>
                       `
                         )
@@ -561,7 +702,7 @@
 
               html += `
               <div class="result-section">
-                <h3>🤖 DNN URL Analysis</h3>
+                <h3>DNN URL Analysis</h3>
                 <div style="padding: 20px; margin: 15px 0; background: ${bgColor}; border-radius: 6px; border-left: 4px solid ${borderColor};">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <h4 style="margin: 0; color: ${borderColor};">${prediction}</h4>
@@ -592,7 +733,7 @@
             } else {
               html += `
               <div class="result-section">
-                <h3>🤖 DNN URL Analysis</h3>
+                <h3>DNN URL Analysis</h3>
                 <div style="padding: 15px; margin: 10px 0; background: #fff5f5; border-radius: 6px; border-left: 4px solid #c53030;">
                   <strong>Error:</strong> ${dnn.error}
                 </div>
@@ -601,13 +742,186 @@
           }
         }
 
-        // External Checks Section
+        // VirusTotal Analysis Section (from direct URL/IP analysis)
+        if (data.vt_analysis && !data.vt_analysis.error) {
+          const vt = data.vt_analysis;
+          const stats = vt.last_analysis_stats || {};
+          const totalEngines =
+            (stats.harmless || 0) +
+            (stats.malicious || 0) +
+            (stats.suspicious || 0) +
+            (stats.undetected || 0);
+
+          const maliciousCount = stats.malicious || 0;
+          const suspiciousCount = stats.suspicious || 0;
+          const harmlessCount = stats.harmless || 0;
+          const undetectedCount = stats.undetected || 0;
+
+          // Determine risk level
+          let riskLevel = "LOW";
+          let riskColor = "#0369a1";
+          if (maliciousCount > 0) {
+            riskLevel = maliciousCount >= 3 ? "HIGH" : "MEDIUM";
+            riskColor = maliciousCount >= 3 ? "#c53030" : "#f39c12";
+          } else if (suspiciousCount > 0) {
+            riskLevel = "MEDIUM";
+            riskColor = "#f39c12";
+          }
+
+          html += `
+          <div class="result-section">
+            <h3>VirusTotal Security Analysis</h3>
+            <div style="padding: 20px; background: ${
+              maliciousCount > 0
+                ? "#fff5f5"
+                : suspiciousCount > 0
+                ? "#fff9e6"
+                : "#f0f9ff"
+            }; border-radius: 8px; border-left: 4px solid ${riskColor}; margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 style="margin: 0; color: ${riskColor};">Risk Level: ${riskLevel}</h4>
+                <span style="font-size: 0.9em; color: #666;">${totalEngines} Security Engines Analyzed</span>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0;">
+                <div style="padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px solid #c53030;">
+                  <div style="font-size: 2em; font-weight: bold; color: #c53030; margin-bottom: 5px;">${maliciousCount}</div>
+                  <div style="font-size: 0.9em; color: #666;">Malicious</div>
+                  ${
+                    maliciousCount > 0
+                      ? `<div style="font-size: 0.8em; color: #c53030; margin-top: 5px;">${(
+                          (maliciousCount / totalEngines) *
+                          100
+                        ).toFixed(1)}%</div>`
+                      : ""
+                  }
+                </div>
+                
+                <div style="padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px solid #f39c12;">
+                  <div style="font-size: 2em; font-weight: bold; color: #f39c12; margin-bottom: 5px;">${suspiciousCount}</div>
+                  <div style="font-size: 0.9em; color: #666;">Suspicious</div>
+                  ${
+                    suspiciousCount > 0
+                      ? `<div style="font-size: 0.8em; color: #f39c12; margin-top: 5px;">${(
+                          (suspiciousCount / totalEngines) *
+                          100
+                        ).toFixed(1)}%</div>`
+                      : ""
+                  }
+                </div>
+                
+                <div style="padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px solid #0369a1;">
+                  <div style="font-size: 2em; font-weight: bold; color: #0369a1; margin-bottom: 5px;">${harmlessCount}</div>
+                  <div style="font-size: 0.9em; color: #666;">Harmless</div>
+                  <div style="font-size: 0.8em; color: #0369a1; margin-top: 5px;">${(
+                    (harmlessCount / totalEngines) *
+                    100
+                  ).toFixed(1)}%</div>
+                </div>
+                
+                <div style="padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px solid #95a5a6;">
+                  <div style="font-size: 2em; font-weight: bold; color: #95a5a6; margin-bottom: 5px;">${undetectedCount}</div>
+                  <div style="font-size: 0.9em; color: #666;">Undetected</div>
+                  <div style="font-size: 0.8em; color: #95a5a6; margin-top: 5px;">${(
+                    (undetectedCount / totalEngines) *
+                    100
+                  ).toFixed(1)}%</div>
+                </div>
+              </div>
+              
+              ${
+                vt.ip
+                  ? `
+              <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                <strong>IP Address:</strong> <code style="font-family: monospace; background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${
+                  vt.ip
+                }</code>
+                ${
+                  vt.country
+                    ? `<br><strong>Country:</strong> ${vt.country}`
+                    : ""
+                }
+                ${
+                  vt.as_owner
+                    ? `<br><strong>AS Owner:</strong> ${vt.as_owner}`
+                    : ""
+                }
+                ${vt.asn ? `<br><strong>ASN:</strong> ${vt.asn}` : ""}
+                ${
+                  vt.reputation !== undefined
+                    ? `<br><strong>Reputation:</strong> ${vt.reputation}`
+                    : ""
+                }
+              </div>
+              `
+                  : ""
+              }
+              
+              ${
+                maliciousCount > 0 && vt.last_analysis_results
+                  ? `
+              <div style="margin-top: 20px; padding: 15px; background: #fff5f5; border-radius: 6px; border: 1px solid #c53030;">
+                <h4 style="margin-top: 0; color: #c53030;">Security Engines Flagging as Malicious:</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                  ${Object.entries(vt.last_analysis_results)
+                    .filter(([engine, result]) => result === "malicious")
+                    .map(
+                      ([engine]) =>
+                        `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 1px solid #c53030; font-size: 0.85em; color: #c53030;">${engine}</span>`
+                    )
+                    .join("")}
+                </div>
+              </div>
+              `
+                  : ""
+              }
+              
+              ${
+                suspiciousCount > 0 && vt.last_analysis_results
+                  ? `
+              <div style="margin-top: 15px; padding: 15px; background: #fff9e6; border-radius: 6px; border: 1px solid #f39c12;">
+                <h4 style="margin-top: 0; color: #f39c12;">Security Engines Flagging as Suspicious:</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                  ${Object.entries(vt.last_analysis_results)
+                    .filter(([engine, result]) => result === "suspicious")
+                    .map(
+                      ([engine]) =>
+                        `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 1px solid #f39c12; font-size: 0.85em; color: #f39c12;">${engine}</span>`
+                    )
+                    .join("")}
+                </div>
+              </div>
+              `
+                  : ""
+              }
+            </div>
+            
+            <!-- Security Measures Information -->
+            <div style="margin-top: 20px; padding: 20px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #0369a1;">
+              <h4 style="margin-top: 0; color: #0369a1;">Security Measures</h4>
+              <p style="margin: 10px 0; color: #555; line-height: 1.6;">
+                <strong>Your device is protected:</strong> This analysis was performed safely through VirusTotal's API. 
+                Your device never directly connects to the suspicious IP address. All security checks are performed 
+                server-side using VirusTotal's threat intelligence database, which aggregates data from ${totalEngines} 
+                security vendors worldwide.
+              </p>
+              <ul style="margin: 10px 0; padding-left: 20px; color: #555; line-height: 1.8;">
+                <li><strong>No Direct Connection:</strong> Your browser never accesses the IP address directly</li>
+                <li><strong>Server-Side Analysis:</strong> All queries are made from our secure server to VirusTotal</li>
+                <li><strong>Threat Intelligence:</strong> Results are based on VirusTotal's database of ${totalEngines} security engines</li>
+                <li><strong>Safe Analysis:</strong> No files are downloaded, no connections are established to the suspicious IP</li>
+              </ul>
+            </div>
+          </div>`;
+        }
+
+        // External Checks Section (legacy format from full analysis)
         if (data.external_checks) {
           const checks = data.external_checks;
           if (checks.ip_reports && checks.ip_reports.length > 0) {
             html += `
             <div class="result-section">
-              <h3>🛡️ VirusTotal Reports</h3>
+              <h3> VirusTotal Reports</h3>
               ${checks.ip_reports
                 .map((report, idx) => {
                   if (report.error) {
@@ -620,13 +934,30 @@
                   const vtData = report.report?.data?.attributes;
                   if (vtData) {
                     const stats = vtData.last_analysis_stats || {};
-                    return `<div style="padding: 10px; margin: 5px 0; background: ${
+                    const totalEngines =
+                      (stats.harmless || 0) +
+                      (stats.malicious || 0) +
+                      (stats.suspicious || 0) +
+                      (stats.undetected || 0);
+                    return `<div style="padding: 15px; margin: 10px 0; background: ${
                       stats.malicious > 0 ? "#fff5f5" : "#f0f9ff"
-                    }; border-radius: 4px;">
+                    }; border-radius: 6px;">
                     <strong>${report.ip || report.url}:</strong><br>
-                    Malicious: ${stats.malicious || 0} | Suspicious: ${
-                      stats.suspicious || 0
-                    } | Clean: ${stats.harmless || 0}
+                    <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                      <div><strong style="color: #c53030;">Malicious:</strong> ${
+                        stats.malicious || 0
+                      }</div>
+                      <div><strong style="color: #f39c12;">Suspicious:</strong> ${
+                        stats.suspicious || 0
+                      }</div>
+                      <div><strong style="color: #0369a1;">Harmless:</strong> ${
+                        stats.harmless || 0
+                      }</div>
+                      <div><strong style="color: #95a5a6;">Undetected:</strong> ${
+                        stats.undetected || 0
+                      }</div>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.9em; color: #666;">Total Engines: ${totalEngines}</div>
                   </div>`;
                   }
                   return `<div style="padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 4px;">
@@ -643,7 +974,7 @@
         // Raw Data Section (collapsible)
         html += `
         <div class="result-section">
-          <h3>📋 Raw Analysis Data</h3>
+          <h3> Raw Analysis Data</h3>
           <details>
             <summary style="cursor: pointer; padding: 10px; background: #f9f9f9; border-radius: 4px; margin-bottom: 10px;">
               Click to view raw JSON data

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>DeepPhish Scanner</title>
+    <link rel="stylesheet" href="styles/popup.css" />
+  </head>
+  <body>
+    <div class="popup-container">
+      <header class="popup-header">
+        <h1>DeepPhish</h1>
+        <p>Email Security Scanner</p>
+      </header>
+
+      <div class="popup-content">
+        <div class="status-section">
+          <div class="status-indicator" id="statusIndicator">
+            <span class="status-dot"></span>
+            <span id="statusText">Checking connection...</span>
+          </div>
+          <div
+            class="auth-section"
+            style="
+              margin-top: 10px;
+              padding: 10px;
+              background: #f5f5f5;
+              border-radius: 6px;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <div>
+                <div id="authStatus" class="auth-status">Checking...</div>
+                <div
+                  id="userEmail"
+                  style="
+                    font-size: 0.85em;
+                    color: #666;
+                    margin-top: 4px;
+                    display: none;
+                  "
+                ></div>
+              </div>
+              <div style="display: flex; gap: 8px">
+                <button
+                  id="loginBtn"
+                  style="
+                    display: none;
+                    padding: 6px 12px;
+                    background: #667eea;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 0.85em;
+                  "
+                >
+                  Login
+                </button>
+                <button
+                  id="logoutBtn"
+                  style="
+                    display: none;
+                    padding: 6px 12px;
+                    background: #999;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 0.85em;
+                  "
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-section">
+          <div class="stat-card">
+            <div class="stat-value" id="emailsScanned">0</div>
+            <div class="stat-label">Emails Scanned</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="threatsFound">0</div>
+            <div class="stat-label">Threats Found</div>
+          </div>
+        </div>
+
+        <div class="actions-section">
+          <button id="scanCurrentEmail" class="action-btn">
+            Scan Current Email
+          </button>
+          <button id="viewSettings" class="action-btn secondary">
+            Settings
+          </button>
+        </div>
+
+        <div
+          class="results-section hidden"
+          id="resultsSection"
+          style="display: block"
+        >
+          <h3>Latest Scan Results</h3>
+          <div id="resultsContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="browser-polyfill.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

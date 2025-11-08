@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — DeepPhish</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <style>
+      .auth-container {
+        max-width: 450px;
+        margin: 80px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .auth-container h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+      }
+
+      .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .form-group label {
+        color: #666;
+        font-weight: 500;
+        font-size: 0.9em;
+      }
+
+      .form-group input {
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1em;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .auth-btn {
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .auth-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      .auth-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .auth-error {
+        padding: 12px;
+        background: #fee;
+        border: 1px solid #c53030;
+        border-radius: 6px;
+        color: #c53030;
+        font-size: 0.9em;
+        display: none;
+      }
+
+      .auth-error.show {
+        display: block;
+      }
+
+      .auth-success {
+        padding: 12px;
+        background: #e8f5e9;
+        border: 1px solid #2e7d32;
+        border-radius: 6px;
+        color: #2e7d32;
+        font-size: 0.9em;
+        display: none;
+      }
+
+      .auth-success.show {
+        display: block;
+      }
+
+      .auth-links {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+      }
+
+      .auth-links a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .auth-links a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="/" style="text-decoration: none; color: inherit">
+        <div class="logo-section">
+          <div class="shield-icon">DG</div>
+          <div class="logo-text">
+            <h1>DeepPhish</h1>
+            <p>Advanced Email Security Analysis</p>
+          </div>
+        </div>
+      </a>
+      <div class="header-actions">
+        <a href="/" class="header-btn">Home</a>
+        <a href="/education" class="header-btn">Education</a>
+        <a href="/about" class="header-btn">About</a>
+      </div>
+    </div>
+
+    <div class="auth-container">
+      <h1>Login</h1>
+
+      <div id="errorMessage" class="auth-error"></div>
+      <div id="successMessage" class="auth-success"></div>
+
+      <form id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="your@email.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            placeholder="••••••••"
+          />
+        </div>
+
+        <button type="submit" class="auth-btn" id="loginBtn">Login</button>
+      </form>
+
+      <div class="auth-links">
+        <p>
+          Don't have an account?
+          <a href="/signup">Sign up</a>
+        </p>
+        <p style="margin-top: 10px">
+          <a href="/">Back to Home</a>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      const loginForm = document.getElementById("loginForm");
+      const errorMessage = document.getElementById("errorMessage");
+      const successMessage = document.getElementById("successMessage");
+      const loginBtn = document.getElementById("loginBtn");
+
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.classList.add("show");
+        successMessage.classList.remove("show");
+      }
+
+      function showSuccess(message) {
+        successMessage.textContent = message;
+        successMessage.classList.add("show");
+        errorMessage.classList.remove("show");
+      }
+
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Logging in...";
+        errorMessage.classList.remove("show");
+        successMessage.classList.remove("show");
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        try {
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            // Store tokens
+            localStorage.setItem("access_token", data.access_token);
+            localStorage.setItem("refresh_token", data.refresh_token);
+            localStorage.setItem("user_email", data.user.email);
+            localStorage.setItem("user_id", data.user.id);
+
+            showSuccess("Login successful! Redirecting...");
+
+            // Redirect to home or dashboard
+            setTimeout(() => {
+              window.location.href = "/";
+            }, 1000);
+          } else {
+            showError(
+              data.error || "Login failed. Please check your credentials."
+            );
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Login";
+          }
+        } catch (error) {
+          showError("Network error. Please try again.");
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Login";
+        }
+      });
+
+      // Check if already logged in
+      if (localStorage.getItem("access_token")) {
+        window.location.href = "/";
+      }
+    </script>
+  </body>
+</html>

@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 from datetime import datetime
 from modules.eml_parser_module import parse_eml, extract_attachments
 from modules.attachment_scanner import scan_attachment
@@ -13,6 +14,19 @@ from modules.nlu_module import (
     analyze_email_content,
 )
 from modules.dnn_module import predict_url, analyze_urls
+from modules.auth import require_auth, optional_auth, get_supabase
+from modules.database import (
+    save_analysis_history,
+    get_analysis_history,
+    get_analysis_by_id,
+    get_user_statistics,
+    create_feedback_report,
+    get_or_create_user_profile,
+    update_user_preferences,
+    get_threat_rules,
+    create_threat_rule,
+    delete_threat_rule,
+)
 import socket
 
 UPLOAD_DIR = Path("uploads")
@@ -21,11 +35,25 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 LAST_RESULT = {}  # in-memory last result for /api/last_result
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key-change-in-production")
+
+# Enable CORS for all routes to allow extension requests
+CORS(app, origins=["chrome-extension://*", "moz-extension://*", "http://localhost:*"], supports_credentials=True)
 
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/login")
+def login_page():
+    return render_template("login.html")
+
+
+@app.route("/signup")
+def signup_page():
+    return render_template("signup.html")
 
 
 @app.route("/education")
@@ -47,9 +75,98 @@ def results_page():
     return render_template("results.html")
 
 
+@app.route("/dashboard")
+def dashboard_page():
+    """
+    Display analytics dashboard with statistics and charts
+    """
+    return render_template("dashboard.html")
+
+
 @app.route("/api/last_result")
+@optional_auth
 def api_last_result():
     return jsonify(LAST_RESULT or {"message": "no results yet"})
+
+
+# Authentication endpoints
+@app.route("/api/auth/signup", methods=["POST"])
+def api_signup():
+    """Sign up a new user"""
+    data = request.get_json()
+    if not data or not data.get("email") or not data.get("password"):
+        return jsonify({"error": "Email and password required"}), 400
+    
+    supabase = get_supabase()
+    if not supabase:
+        return jsonify({"error": "Authentication service unavailable"}), 503
+    
+    try:
+        response = supabase.auth.sign_up({
+            "email": data["email"],
+            "password": data["password"]
+        })
+        
+        if response.user:
+            return jsonify({
+                "message": "Sign up successful. Please check your email to verify your account.",
+                "user": {
+                    "id": response.user.id,
+                    "email": response.user.email
+                }
+            }), 201
+        else:
+            return jsonify({"error": "Sign up failed"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/auth/login", methods=["POST"])
+def api_login():
+    """Login and get access token"""
+    data = request.get_json()
+    if not data or not data.get("email") or not data.get("password"):
+        return jsonify({"error": "Email and password required"}), 400
+    
+    supabase = get_supabase()
+    if not supabase:
+        return jsonify({"error": "Authentication service unavailable"}), 503
+    
+    try:
+        response = supabase.auth.sign_in_with_password({
+            "email": data["email"],
+            "password": data["password"]
+        })
+        
+        if response.user and response.session:
+            return jsonify({
+                "access_token": response.session.access_token,
+                "refresh_token": response.session.refresh_token,
+                "user": {
+                    "id": response.user.id,
+                    "email": response.user.email
+                }
+            }), 200
+        else:
+            return jsonify({"error": "Login failed"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 401
+
+
+@app.route("/api/auth/verify", methods=["POST"])
+def api_verify():
+    """Verify access token"""
+    data = request.get_json()
+    if not data or not data.get("token"):
+        return jsonify({"error": "Token required"}), 400
+    
+    from modules.auth import verify_token
+    user = verify_token(data["token"])
+    
+    if user:
+        return jsonify({"valid": True, "user": user}), 200
+    else:
+        return jsonify({"valid": False, "error": "Invalid token"}), 401
 
 
 # -----------------------
@@ -90,6 +207,7 @@ def extract_email_text(parsed_eml):
 # Parses email and performs comprehensive analysis
 # -----------------------
 @app.route("/parse/eml", methods=["POST"])
+@optional_auth  # Allow file uploads without auth (free tier)
 def parse_eml_route():
     global LAST_RESULT
     if "file" not in request.files:
@@ -129,6 +247,7 @@ def parse_eml_route():
 # Accepts multipart with 'file'
 # -----------------------
 @app.route("/scan/attachment", methods=["POST"])
+@require_auth
 def scan_attachment_route():
     global LAST_RESULT
     if "file" not in request.files:
@@ -138,6 +257,16 @@ def scan_attachment_route():
     f.save(save_path)
     res = scan_attachment(str(save_path))
     LAST_RESULT = res
+    
+    # Save to database if user is authenticated
+    if hasattr(request, 'current_user') and request.current_user:
+        save_analysis_history(
+            user_id=request.current_user['id'],
+            analysis_type='attachment',
+            result_data=res,
+            input_data={'filename': f.filename}
+        )
+    
     return jsonify(res), 200
 
 
@@ -146,6 +275,7 @@ def scan_attachment_route():
 # Accepts JSON {"ip": "1.2.3.4"} or {"url": "..."} (URL path checking uses vt_ip_report for IPs)
 # -----------------------
 @app.route("/analyze/url", methods=["POST"])
+@require_auth
 def analyze_url_route():
     global LAST_RESULT
     data = request.get_json(force=True)
@@ -184,6 +314,16 @@ def analyze_url_route():
             result["vt_analysis"] = {"error": str(e)}
 
         LAST_RESULT = result
+        
+        # Save to database if user is authenticated
+        if hasattr(request, 'current_user') and request.current_user:
+            save_analysis_history(
+                user_id=request.current_user['id'],
+                analysis_type='url',
+                result_data=result,
+                input_data={'ip': ip, 'url': ip_url}
+            )
+        
         return jsonify(result), 200
 
     # Handle URL
@@ -228,6 +368,16 @@ def analyze_url_route():
             }
 
         LAST_RESULT = result
+        
+        # Save to database if user is authenticated
+        if hasattr(request, 'current_user') and request.current_user:
+            save_analysis_history(
+                user_id=request.current_user['id'],
+                analysis_type='url',
+                result_data=result,
+                input_data={'url': url, 'host': host}
+            )
+        
         return jsonify(result), 200
 
     return jsonify({"error": "provide ip or url field"}), 400
@@ -255,6 +405,7 @@ def store_json_route():
 # Accepts JSON {"text": "..."} and returns NLU classification
 # -----------------------
 @app.route("/analyze/nlu", methods=["POST"])
+@require_auth
 def analyze_nlu_route():
     global LAST_RESULT
     data = request.get_json(force=True)
@@ -344,6 +495,7 @@ def analyze_comprehensive_route():
 # Performs full analysis: parsing + NLU + URL extraction + attachments
 # -----------------------
 @app.route("/analyze/full", methods=["POST"])
+@require_auth
 def analyze_full_route():
     """
     Complete analysis pipeline: Parse email, extract URLs/IPs, analyze with NLU,
@@ -516,7 +668,168 @@ def analyze_full_route():
     }
 
     LAST_RESULT = results
+    
+    # Save to database if user is authenticated
+    if hasattr(request, 'current_user') and request.current_user:
+        save_analysis_history(
+            user_id=request.current_user['id'],
+            analysis_type='full',
+            result_data=results,
+            input_data={'filename': f.filename if 'file' in request.files else None}
+        )
+    
     return jsonify(results), 200
+
+
+# -----------------------
+# Analysis History API Endpoints
+# -----------------------
+@app.route("/api/history", methods=["GET"])
+@require_auth
+def get_history_route():
+    """Get analysis history for authenticated user"""
+    limit = request.args.get("limit", 50, type=int)
+    offset = request.args.get("offset", 0, type=int)
+    analysis_type = request.args.get("type")
+    is_phishing = request.args.get("is_phishing")
+    is_phishing = bool(is_phishing) if is_phishing is not None else None
+    
+    history = get_analysis_history(
+        user_id=request.current_user['id'],
+        limit=limit,
+        offset=offset,
+        analysis_type=analysis_type,
+        is_phishing=is_phishing,
+    )
+    
+    return jsonify({"history": history, "count": len(history)}), 200
+
+
+@app.route("/api/history/<analysis_id>", methods=["GET"])
+@require_auth
+def get_history_item_route(analysis_id):
+    """Get a specific analysis by ID"""
+    analysis = get_analysis_by_id(analysis_id, request.current_user['id'])
+    
+    if not analysis:
+        return jsonify({"error": "Analysis not found"}), 404
+    
+    return jsonify(analysis), 200
+
+
+@app.route("/api/statistics", methods=["GET"])
+@require_auth
+def get_statistics_route():
+    """Get user statistics"""
+    days = request.args.get("days", 30, type=int)
+    stats = get_user_statistics(request.current_user['id'], days=days)
+    return jsonify(stats), 200
+
+
+@app.route("/api/feedback", methods=["POST"])
+@require_auth
+def create_feedback_route():
+    """Create a false positive/negative feedback report"""
+    data = request.get_json(force=True)
+    
+    if not data or not data.get("analysis_id") or not data.get("feedback_type"):
+        return jsonify({"error": "analysis_id and feedback_type required"}), 400
+    
+    feedback_id = create_feedback_report(
+        analysis_id=data["analysis_id"],
+        user_id=request.current_user['id'],
+        feedback_type=data["feedback_type"],
+        original_prediction=data.get("original_prediction", ""),
+        user_correction=data.get("user_correction"),
+        comments=data.get("comments"),
+    )
+    
+    if feedback_id:
+        return jsonify({"id": feedback_id, "message": "Feedback submitted"}), 201
+    else:
+        return jsonify({"error": "Failed to create feedback"}), 500
+
+
+@app.route("/api/profile", methods=["GET", "PUT"])
+@require_auth
+def profile_route():
+    """Get or update user profile"""
+    if request.method == "GET":
+        profile = get_or_create_user_profile(
+            request.current_user['id'],
+            request.current_user.get('email', '')
+        )
+        return jsonify(profile), 200
+    else:  # PUT
+        data = request.get_json(force=True)
+        if data.get("preferences"):
+            update_user_preferences(request.current_user['id'], data["preferences"])
+        return jsonify({"message": "Profile updated"}), 200
+
+
+@app.route("/api/threat-rules", methods=["GET", "POST"])
+@require_auth
+def threat_rules_route():
+    """Get or create threat rules"""
+    if request.method == "GET":
+        rules = get_threat_rules(request.current_user['id'])
+        return jsonify({"rules": rules}), 200
+    else:  # POST
+        data = request.get_json(force=True)
+        rule_id = create_threat_rule(
+            user_id=request.current_user['id'],
+            rule_type=data.get("rule_type"),
+            rule_category=data.get("rule_category"),
+            rule_value=data.get("rule_value"),
+            description=data.get("description"),
+        )
+        if rule_id:
+            return jsonify({"id": rule_id, "message": "Rule created"}), 201
+        else:
+            return jsonify({"error": "Failed to create rule"}), 500
+
+
+@app.route("/api/threat-rules/<rule_id>", methods=["DELETE"])
+@require_auth
+def delete_threat_rule_route(rule_id):
+    """Delete a threat rule"""
+    success = delete_threat_rule(rule_id, request.current_user['id'])
+    if success:
+        return jsonify({"message": "Rule deleted"}), 200
+    else:
+        return jsonify({"error": "Failed to delete rule"}), 500
+
+
+@app.route("/api/export/<analysis_id>", methods=["GET"])
+@require_auth
+def export_analysis_route(analysis_id):
+    """Export analysis as JSON (for now, PDF/CSV can be added later)"""
+    analysis = get_analysis_by_id(analysis_id, request.current_user['id'])
+    
+    if not analysis:
+        return jsonify({"error": "Analysis not found"}), 404
+    
+    # Return as downloadable JSON
+    from flask import Response
+    return Response(
+        jsonify(analysis).data,
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment; filename=analysis_{analysis_id}.json'}
+    )
+
+
+@app.route("/history")
+@require_auth
+def history_page():
+    """Analysis history page"""
+    return render_template("history.html")
+
+
+@app.route("/settings")
+@require_auth
+def settings_page():
+    """User settings page"""
+    return render_template("settings.html")
 
 
 if __name__ == "__main__":
