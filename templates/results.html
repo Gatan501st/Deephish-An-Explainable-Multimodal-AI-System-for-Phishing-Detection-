@@ -8,6 +8,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
     <style>
       .results-container {
         max-width: 1200px;
@@ -16,23 +17,24 @@
       }
 
       .result-section {
-        background: white;
-        border: 1px solid #e0e0e0;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         padding: 30px;
         margin-bottom: 30px;
+        box-shadow: 0 2px 8px var(--shadow);
       }
 
       .result-section h3 {
-        color: #333;
+        color: var(--text-primary);
         font-size: 1.5em;
         margin-bottom: 20px;
-        border-bottom: 2px solid #f0f0f0;
+        border-bottom: 2px solid var(--border-color);
         padding-bottom: 10px;
       }
 
       .result-section h4 {
-        color: #555;
+        color: var(--text-tertiary);
         font-size: 1.2em;
         margin-top: 20px;
         margin-bottom: 10px;
@@ -47,37 +49,39 @@
       }
 
       .risk-high {
-        background: #fee;
-        color: #c53030;
-        border: 1px solid #c53030;
+        background: rgba(245, 101, 101, 0.2);
+        color: var(--error-color);
+        border: 2px solid var(--error-color);
       }
 
       .risk-medium {
-        background: #fff5dc;
-        color: #b7791f;
-        border: 1px solid #b7791f;
+        background: rgba(255, 193, 7, 0.2);
+        color: #f39c12;
+        border: 2px solid #f39c12;
       }
 
       .risk-low {
-        background: #f0f9ff;
-        color: #0369a1;
-        border: 1px solid #0369a1;
+        background: rgba(72, 187, 120, 0.2);
+        color: var(--success-color);
+        border: 2px solid var(--success-color);
       }
 
       .nlu-result {
-        padding: 15px;
-        border-radius: 6px;
-        margin: 10px 0;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 15px 0;
       }
 
       .nlu-phishing {
-        background: #fff5f5;
-        border-left: 4px solid #c53030;
+        background: rgba(245, 101, 101, 0.15);
+        border: 2px solid var(--error-color);
+        border-left: 6px solid var(--error-color);
       }
 
       .nlu-ham {
-        background: #f0f9ff;
-        border-left: 4px solid #0369a1;
+        background: rgba(72, 187, 120, 0.15);
+        border: 2px solid var(--success-color);
+        border-left: 6px solid var(--success-color);
       }
 
       .info-grid {
@@ -89,20 +93,22 @@
 
       .info-item {
         padding: 12px;
-        background: #f9f9f9;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
         border-radius: 4px;
       }
 
       .info-item strong {
         display: block;
-        color: #666;
+        color: var(--text-tertiary);
         font-size: 0.85em;
         margin-bottom: 5px;
       }
 
       .info-item span {
-        color: #333;
+        color: var(--text-secondary);
         font-size: 1em;
+        word-break: break-word;
       }
 
       .url-list,
@@ -116,20 +122,140 @@
       .ip-list li {
         padding: 8px;
         margin: 5px 0;
-        background: #f9f9f9;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
         border-radius: 4px;
         font-family: monospace;
         font-size: 0.9em;
+        color: var(--text-secondary);
+      }
+
+      .dnn-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 24px;
+        margin: 18px 0;
+        box-shadow: 0 25px 55px var(--shadow);
+      }
+
+      .dnn-card.safe {
+        border-left: 4px solid #36cfc9;
+      }
+
+      .dnn-card.danger {
+        border-left: 4px solid var(--error-color);
+      }
+
+      .dnn-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .dnn-card.danger .status-pill {
+        background: rgba(245, 101, 101, 0.18);
+        color: var(--error-color);
+      }
+
+      .dnn-card.safe .status-pill {
+        background: rgba(54, 207, 201, 0.18);
+        color: #36cfc9;
+      }
+
+      .dnn-card.danger .confidence-chip {
+        color: var(--error-color);
+      }
+
+      .dnn-card.safe .confidence-chip {
+        color: #36cfc9;
+      }
+
+      .confidence-chip {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .url-line {
+        margin: 10px 0 0;
+        font-family: "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+        word-break: break-all;
+        color: var(--text-secondary);
+      }
+
+      .warning-panel {
+        margin-top: 18px;
+        padding: 16px;
+        border-radius: 12px;
+        background: rgba(245, 101, 101, 0.12);
+        border: 1px solid rgba(245, 101, 101, 0.4);
+      }
+
+      .indicator-wrapper {
+        margin-top: 18px;
+      }
+
+      .indicator-wrapper h4 {
+        margin: 0 0 12px;
+        color: var(--text-primary);
+        font-size: 1em;
+      }
+
+      .indicator-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .indicator-list li {
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: var(--bg-tertiary);
+        border-left: 3px solid var(--accent-color);
+        color: var(--text-secondary);
+      }
+
+      .indicator-list li strong {
+        color: var(--text-primary);
+      }
+
+      .indicator-list.danger li {
+        border-left-color: var(--error-color);
+      }
+      .probabilities {
+        margin-top: 12px;
+        font-size: 0.9em;
+        color: var(--text-secondary);
+      }
+
+      .indicator-list.safe li {
+        border-left-color: #36cfc9;
       }
 
       .loading {
         text-align: center;
         padding: 60px 20px;
+        color: var(--text-secondary);
       }
 
       .spinner {
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #666;
+        border: 3px solid var(--bg-tertiary);
+        border-top: 3px solid var(--accent-color);
         border-radius: 50%;
         width: 50px;
         height: 50px;
@@ -147,17 +273,18 @@
       }
 
       .error-message {
-        background: #fff5f5;
-        border: 1px solid #c53030;
+        background: rgba(245, 101, 101, 0.15);
+        border: 1px solid var(--error-color);
         border-radius: 6px;
         padding: 15px;
-        color: #c53030;
+        color: var(--error-color);
         margin: 20px 0;
       }
 
       .probability-bar {
         height: 20px;
-        background: #e0e0e0;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
         border-radius: 10px;
         overflow: hidden;
         margin: 5px 0;
@@ -176,11 +303,11 @@
       }
 
       .probability-ham {
-        background: #0369a1;
+        background: var(--success-color);
       }
 
       .probability-phishing {
-        background: #c53030;
+        background: var(--error-color);
       }
 
       .vt-stat-card {
@@ -227,7 +354,7 @@
     <div class="header">
       <a href="/" style="text-decoration: none; color: inherit">
         <div class="logo-section">
-          <div class="shield-icon">DG</div>
+          <div class="shield-icon">DP</div>
           <div class="logo-text">
             <h1>DeepPhish</h1>
             <p>Advanced Email Security Analysis</p>
@@ -235,6 +362,9 @@
         </div>
       </a>
       <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <span class="theme-toggle-icon" id="themeIcon">Dark</span>
+        </button>
         <a href="/" class="header-btn">Home</a>
         <a href="/education" class="header-btn">Education</a>
         <a href="/about" class="header-btn">About</a>
@@ -242,8 +372,65 @@
     </div>
 
     <div class="results-container">
-      <div style="margin-bottom: 20px">
+      <div
+        style="
+          margin-bottom: 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
         <a href="/" class="header-btn">← Back to Home</a>
+        <div
+          id="exportButtons"
+          style="display: none; gap: 10px; align-items: center"
+        >
+          <button
+            class="header-btn"
+            style="
+              background: #667eea;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin-left: 10px;
+            "
+            onclick="exportResults('json')"
+          >
+            Export JSON
+          </button>
+          <button
+            class="header-btn"
+            style="
+              background: #c53030;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin-left: 10px;
+            "
+            onclick="exportResults('pdf')"
+          >
+            Export PDF
+          </button>
+          <button
+            class="header-btn"
+            style="
+              background: #0369a1;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin-left: 10px;
+            "
+            onclick="exportResults('csv')"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
 
       <div id="loadingSection" class="loading">
@@ -272,6 +459,11 @@
           }
 
           displayResults(data);
+          // Show export buttons if user is authenticated
+          const token = localStorage.getItem("access_token");
+          if (token) {
+            document.getElementById("exportButtons").style.display = "flex";
+          }
         } catch (error) {
           document.getElementById("loadingSection").style.display = "none";
           showError("Failed to load results: " + error.message);
@@ -300,6 +492,7 @@
               ? "risk-medium"
               : "risk-low";
 
+          const isHighRisk = risk.risk_level === "HIGH" || risk.risk_level === "MEDIUM";
           html += `
           <div class="result-section">
             <h3>Risk Assessment</h3>
@@ -312,11 +505,18 @@
                     .join("")}</ul>`
                 : ""
             }
-            <div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 6px;">
+            <div style="margin-top: 15px; padding: 15px; background: var(--bg-tertiary); border-radius: 6px; border: 1px solid var(--border-color);">
               <strong>Recommendation:</strong> ${
                 risk.recommendation || "No specific recommendation"
               }
             </div>
+            ${isHighRisk ? `
+            <div style="margin-top: 20px; padding: 20px; background: rgba(245, 101, 101, 0.15); border: 2px solid var(--error-color); border-radius: 8px; text-align: center;">
+              <h4 style="color: var(--error-color); margin-top: 0;">Security Alert: Potential Threat Detected</h4>
+              <p style="color: var(--text-secondary); margin-bottom: 15px;">Learn how to protect yourself from phishing attacks and recognize common threats.</p>
+              <a href="/education" style="display: inline-block; padding: 12px 24px; background: var(--accent-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent-color)'">Learn About Phishing Protection →</a>
+            </div>
+            ` : ''}
           </div>`;
         }
 
@@ -328,16 +528,24 @@
           const probs = nlu.probabilities || {};
           const explainability = nlu.explainability || {};
 
-          html += `
+              const showEducationLink = isPhishing && (nlu.confidence > 0.6 || probs.phishing > 0.6);
+              html += `
           <div class="result-section">
             <h3>NLU Text Analysis</h3>
             <div class="nlu-result ${nluClass}">
               <h4>Classification: ${
                 nlu.prediction || (isPhishing ? "PHISHING" : "HAM")
               }</h4>
-              <p><strong>Confidence:</strong> ${(nlu.confidence * 100).toFixed(
+              <p style="color: var(--text-secondary); font-size: 1.1em;"><strong style="color: var(--text-primary);">Confidence:</strong> ${(nlu.confidence * 100).toFixed(
                 2
               )}%</p>
+              ${showEducationLink ? `
+              <div style="margin-top: 20px; padding: 20px; background: rgba(245, 101, 101, 0.2); border: 2px solid var(--error-color); border-radius: 8px; text-align: center;">
+                <h4 style="color: var(--error-color); margin-top: 0; font-size: 1.3em;">Phishing Email Detected</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 1.05em;">This email shows characteristics of a phishing attempt. Learn how to identify and protect yourself from similar threats.</p>
+                <a href="/education" style="display: inline-block; padding: 12px 24px; background: var(--accent-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; font-size: 1em;" onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent-color)'">Learn About Phishing Protection →</a>
+              </div>
+              ` : ''}
               
               <div style="margin-top: 15px;">
                 <strong>Probability Breakdown:</strong>
@@ -370,34 +578,35 @@
                 )}%</small>
               </div>
               
-              ${
-                (explainability.top_concerns &&
-                  explainability.top_concerns.length > 0) ||
-                (explainability.suspicious_phrases &&
-                  explainability.suspicious_phrases.length > 0)
-                  ? `
-              <div style="margin-top: 20px; padding: 15px; background: #fff9e6; border-radius: 6px; border-left: 4px solid #f39c12;">
-                <h4 style="margin-top: 0; color: #d68910;">Suspicious Words Detected:</h4>
-                <ul style="margin: 10px 0; padding-left: 20px;">
+              <div style="margin-top: 25px; padding: 20px; background: rgba(245, 101, 101, 0.15); border: 2px solid var(--error-color); border-radius: 8px;">
+                <h4 style="margin-top: 0; color: var(--error-color); font-size: 1.2em; margin-bottom: 15px;">What Makes This Email Malicious:</h4>
+                ${
+                  (explainability.top_concerns &&
+                    explainability.top_concerns.length > 0) ||
+                  (explainability.suspicious_phrases &&
+                    explainability.suspicious_phrases.length > 0)
+                    ? `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
                   ${(explainability.top_concerns || [])
+                    .slice(0, 6)
                     .map(
                       (concern) => `
-                    <li style="margin: 8px 0;">
-                      <strong style="color: #c0392b;">"${
+                    <div style="padding: 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; border-left: 4px solid var(--error-color);">
+                      <strong style="color: var(--error-color); font-size: 1.05em; display: block; margin-bottom: 5px;">"${
                         concern.word || concern.token || "Unknown"
-                      }"</strong> - 
-                      <span style="color: #555;">${
+                      }"</strong>
+                      <p style="color: var(--text-secondary); margin: 5px 0; line-height: 1.5;">${
                         concern.explanation ||
                         "This word is flagged as suspicious"
-                      }</span>
+                      }</p>
                       ${
                         concern.importance
-                          ? `<span style="color: #999; font-size: 0.9em;"> (Importance: ${(
+                          ? `<span style="color: var(--text-tertiary); font-size: 0.85em;">Impact: ${(
                               concern.importance * 100
-                            ).toFixed(1)}%)</span>`
+                            ).toFixed(1)}%</span>`
                           : ""
                       }
-                    </li>`
+                    </div>`
                     )
                     .join("")}
                   ${
@@ -405,44 +614,45 @@
                       explainability.top_concerns.length === 0) &&
                     explainability.suspicious_phrases
                       ? explainability.suspicious_phrases
-                          .slice(0, 10)
+                          .slice(0, 6)
                           .map(
                             (phrase) => `
-                    <li style="margin: 8px 0;">
-                      <strong style="color: #c0392b;">"${
+                    <div style="padding: 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; border-left: 4px solid var(--error-color);">
+                      <strong style="color: var(--error-color); font-size: 1.05em; display: block; margin-bottom: 5px;">"${
                         phrase.word || phrase.token || "Unknown"
-                      }"</strong> - 
-                      <span style="color: #555;">This word is flagged as suspicious</span>
+                      }"</strong>
+                      <p style="color: var(--text-secondary); margin: 5px 0;">This word is flagged as suspicious</p>
                       ${
                         phrase.importance
-                          ? `<span style="color: #999; font-size: 0.9em;"> (Importance: ${(
+                          ? `<span style="color: var(--text-tertiary); font-size: 0.85em;">Impact: ${(
                               phrase.importance * 100
-                            ).toFixed(1)}%)</span>`
+                            ).toFixed(1)}%</span>`
                           : ""
                       }
-                    </li>`
+                    </div>`
                           )
                           .join("")
                       : ""
                   }
-                </ul>
-                ${
-                  (!explainability.top_concerns ||
-                    explainability.top_concerns.length === 0) &&
-                  (!explainability.suspicious_phrases ||
-                    explainability.suspicious_phrases.length === 0)
-                    ? `<p style="color: #666; font-style: italic;">No specific suspicious words detected, but the overall content pattern suggests phishing.</p>`
+                </div>
+                `
+                    : isPhishing
+                    ? `
+                <div style="padding: 15px; background: var(--bg-primary); border-radius: 6px; border: 1px solid var(--border-color);">
+                  <p style="color: var(--text-secondary); margin: 0 0 10px 0; line-height: 1.6;">
+                    <strong style="color: var(--text-primary);">Pattern-Based Detection:</strong> While no specific suspicious words were identified, the overall content pattern, structure, and linguistic features suggest this is a phishing attempt. The AI model detected:
+                  </p>
+                  <ul style="margin-top: 10px; margin-left: 20px; color: var(--text-secondary);">
+                    <li>Unusual urgency or pressure tactics</li>
+                    <li>Suspicious email structure or formatting</li>
+                    <li>Patterns consistent with known phishing campaigns</li>
+                    <li>Linguistic markers that differ from legitimate communications</li>
+                  </ul>
+                </div>
+                `
                     : ""
                 }
-              </div>`
-                  : isPhishing
-                  ? `
-              <div style="margin-top: 20px; padding: 15px; background: #fff9e6; border-radius: 6px; border-left: 4px solid #f39c12;">
-                <h4 style="margin-top: 0; color: #d68910;">Analysis Note:</h4>
-                <p style="color: #555;">This content was classified as phishing, but no specific suspicious words were identified. The detection is based on overall text patterns and structure.</p>
-              </div>`
-                  : ""
-              }
+              </div>
             </div>
           </div>`;
         }
@@ -483,8 +693,13 @@
               }
             </div>
             ${
-              emailData.email_preview
-                ? `<div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 6px; font-family: monospace; font-size: 0.9em; white-space: pre-wrap;">${emailData.email_preview}</div>`
+              emailData.email_preview || emailData.body || data.email_content
+                ? `
+            <div style="margin-top: 20px;">
+              <h4 style="color: var(--text-primary); margin-bottom: 10px;">Email Preview:</h4>
+              <div style="padding: 20px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; font-family: 'Courier New', monospace; font-size: 0.95em; white-space: pre-wrap; color: var(--text-secondary); max-height: 400px; overflow-y: auto; line-height: 1.6;">${emailData.email_preview || emailData.body || data.email_content || 'No preview available'}</div>
+            </div>
+            `
                 : ""
             }
           </div>`;
@@ -532,92 +747,82 @@
                <strong>Phishing Detected:</strong> ${dnn.phishing_detected}</p>
             
             ${dnn.detailed_results
-              .map((result, idx) => {
+              .map((result) => {
                 if (result.error) {
-                  return `<div style="padding: 15px; margin: 10px 0; background: #fff5f5; border-radius: 6px; border-left: 4px solid #c53030;">
-                  <strong>${result.url || "Unknown URL"}:</strong> Error - ${
-                    result.error
-                  }
-                </div>`;
+                  return `<div class="warning-panel"><strong>${
+                    result.url || "Unknown URL"
+                  }:</strong> Error - ${result.error}</div>`;
                 }
 
                 const isPhishing = result.is_phishing;
-                const bgColor = isPhishing ? "#fff5f5" : "#f0f9ff";
-                const borderColor = isPhishing ? "#c53030" : "#0369a1";
+                const cardType = isPhishing ? "danger" : "safe";
                 const prediction =
                   result.prediction || (isPhishing ? "PHISHING" : "LEGITIMATE");
                 const confidence = (result.confidence * 100).toFixed(2);
 
-                // Feature contributions
                 let featuresHtml = "";
                 if (
                   result.top_phishing_indicators &&
                   result.top_phishing_indicators.length > 0
                 ) {
                   featuresHtml = `
-                  <div style="margin-top: 15px;">
-                    <h4 style="font-size: 1em; margin-bottom: 10px;"> Top Phishing Indicators:</h4>
-                    <ul style="list-style: none; padding: 0;">
-                      ${result.top_phishing_indicators
-                        .map(
-                          (feat, fIdx) => `
-                        <li style="padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 4px; border-left: 3px solid ${
-                          isPhishing ? "#c53030" : "#0369a1"
-                        };">
-                          <strong>${feat.feature}:</strong> 
-                          <span style="color: ${
-                            feat.value > 0 ? "#c53030" : "#0369a1"
-                          };">${
-                            feat.value > 0 ? " Present" : "Not Present"
-                          }</span>
-                          <br>
-                          <small style="color: #666;">${
-                            feat.description
-                          }</small>
-                          ${
-                            feat.contribution > 0
-                              ? `<br><small style="color: #999;">Contribution: ${feat.contribution.toFixed(
-                                  3
-                                )}</small>`
-                              : ""
-                          }
-                        </li>
-                      `
-                        )
-                        .join("")}
-                    </ul>
-                  </div>
-                `;
+                    <div class="indicator-wrapper">
+                      <h4>Top Phishing Indicators</h4>
+                      <ul class="indicator-list ${cardType}">
+                        ${result.top_phishing_indicators
+                          .map(
+                            (feat) => `
+                              <li>
+                                <strong>${feat.feature}</strong>
+                                <div>${feat.description || "Suspicious pattern detected"}</div>
+                                ${
+                                  typeof feat.contribution === "number"
+                                    ? `<small>Impact score: ${feat.contribution.toFixed(
+                                        3
+                                      )}</small>`
+                                    : ""
+                                }
+                              </li>
+                            `
+                          )
+                          .join("")}
+                      </ul>
+                    </div>
+                  `;
                 }
 
                 return `
-                <div style="padding: 20px; margin: 15px 0; background: ${bgColor}; border-radius: 6px; border-left: 4px solid ${borderColor};">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h4 style="margin: 0; color: ${borderColor};">${prediction}</h4>
-                    <span style="font-weight: bold; color: ${borderColor};">${confidence}% confidence</span>
-                  </div>
-                  <p style="margin: 5px 0; font-family: monospace; font-size: 0.9em; word-break: break-all;">${
-                    result.url || "Unknown"
-                  }</p>
-                  
-                  ${
-                    result.probabilities
-                      ? `
-                    <div style="margin-top: 10px;">
-                      <small>Probabilities: Legitimate ${(
-                        result.probabilities.legitimate * 100
-                      ).toFixed(1)}% | 
-                             Phishing ${(
-                               result.probabilities.phishing * 100
-                             ).toFixed(1)}%</small>
+                  <div class="dnn-card ${cardType}">
+                    <div class="dnn-card-head">
+                      <div>
+                        <span class="status-pill">${prediction}</span>
+                        <p class="url-line">${result.url || "Unknown"}</p>
+                      </div>
+                      <span class="confidence-chip">${confidence}% confidence</span>
                     </div>
-                  `
-                      : ""
-                  }
-                  
-                  ${featuresHtml}
-                </div>
-              `;
+                    ${
+                      isPhishing && parseFloat(confidence) > 60
+                        ? `
+                        <div class="warning-panel">
+                          <p style="margin: 0 0 10px 0;"><strong>Warning:</strong> This URL has been flagged as potentially malicious. Do not visit this link.</p>
+                          <a href="/education" class="header-btn" style="display: inline-block; padding: 8px 16px; border-radius: 999px;">Learn About Safe Browsing →</a>
+                        </div>
+                      `
+                        : ""
+                    }
+                    ${
+                      result.probabilities
+                        ? `
+                        <div class="probabilities">
+                          Legitimate ${(result.probabilities.legitimate * 100).toFixed(1)}% •
+                          Phishing ${(result.probabilities.phishing * 100).toFixed(1)}%
+                        </div>
+                      `
+                        : ""
+                    }
+                    ${featuresHtml}
+                  </div>
+                `;
               })
               .join("")}
           </div>`;
@@ -626,74 +831,39 @@
             const dnn = data.dnn_analysis;
             if (!dnn.error) {
               const isPhishing = dnn.is_phishing;
-              const bgColor = isPhishing ? "#fff5f5" : "#f0f9ff";
-              const borderColor = isPhishing ? "#c53030" : "#0369a1";
+              const cardType = isPhishing ? "danger" : "safe";
               const prediction =
                 dnn.prediction || (isPhishing ? "PHISHING" : "LEGITIMATE");
               const confidence = (dnn.confidence * 100).toFixed(2);
 
-              // Use simplified summary if available, otherwise fall back to detailed
+              let indicatorSource =
+                dnn.summary?.key_concerns ||
+                dnn.top_phishing_indicators ||
+                dnn.detailed?.top_phishing_indicators ||
+                [];
               let featuresHtml = "";
-              if (
-                dnn.summary &&
-                dnn.summary.key_concerns &&
-                dnn.summary.key_concerns.length > 0
-              ) {
-                // User-friendly summary
+              if (indicatorSource.length > 0) {
                 featuresHtml = `
-                  <div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 6px;">
-                    <h4 style="font-size: 1em; margin-bottom: 10px; color: ${borderColor};">Key Concerns:</h4>
-                    <ul style="list-style: none; padding: 0; margin: 0;">
-                      ${dnn.summary.key_concerns
-                        .map(
-                          (concern) => `
-                        <li style="padding: 10px; margin: 8px 0; background: white; border-radius: 4px; border-left: 3px solid ${borderColor};">
-                          <span style="color: #555;">${concern}</span>
-                        </li>
-                      `
-                        )
-                        .join("")}
-                    </ul>
-                    ${
-                      dnn.summary.risk_level
-                        ? `
-                    <div style="margin-top: 12px; padding: 10px; background: ${
-                      dnn.summary.risk_level === "HIGH"
-                        ? "#fff5f5"
-                        : dnn.summary.risk_level === "MEDIUM"
-                        ? "#fff9e6"
-                        : "#f0f9ff"
-                    }; border-radius: 4px;">
-                      <strong>Risk Level:</strong> <span style="color: ${borderColor};">${
-                            dnn.summary.risk_level
-                          }</span>
-                    </div>
-                    `
-                        : ""
-                    }
-                  </div>
-                `;
-              } else if (
-                dnn.top_phishing_indicators &&
-                dnn.top_phishing_indicators.length > 0
-              ) {
-                // Fallback to detailed indicators
-                featuresHtml = `
-                  <div style="margin-top: 15px;">
-                    <h4 style="font-size: 1em; margin-bottom: 10px;"> Top Phishing Indicators:</h4>
-                    <ul style="list-style: none; padding: 0;">
-                      ${dnn.top_phishing_indicators
-                        .slice(0, 5)
-                        .map(
-                          (feat) => `
-                        <li style="padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 4px; border-left: 3px solid ${
-                          isPhishing ? "#c53030" : "#0369a1"
-                        };">
-                          <strong>${feat.feature}:</strong> 
-                          <span style="color: #666;">${feat.description}</span>
-                        </li>
-                      `
-                        )
+                  <div class="indicator-wrapper">
+                    <h4>Key Indicators</h4>
+                    <ul class="indicator-list ${cardType}">
+                      ${indicatorSource
+                        .map((indicator) => {
+                          if (typeof indicator === "string") {
+                            return `<li>${indicator}</li>`;
+                          }
+                          return `
+                            <li>
+                              <strong>${indicator.feature || indicator.name}</strong>
+                              <div>${indicator.description || indicator.reason || ""}</div>
+                              ${
+                                indicator.value !== undefined
+                                  ? `<small>Value observed: ${indicator.value}</small>`
+                                  : ""
+                              }
+                            </li>
+                          `;
+                        })
                         .join("")}
                     </ul>
                   </div>
@@ -703,30 +873,24 @@
               html += `
               <div class="result-section">
                 <h3>DNN URL Analysis</h3>
-                <div style="padding: 20px; margin: 15px 0; background: ${bgColor}; border-radius: 6px; border-left: 4px solid ${borderColor};">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h4 style="margin: 0; color: ${borderColor};">${prediction}</h4>
-                    <span style="font-weight: bold; color: ${borderColor};">${confidence}% confidence</span>
+                <div class="dnn-card ${cardType}">
+                  <div class="dnn-card-head">
+                    <div>
+                      <span class="status-pill">${prediction}</span>
+                      <p class="url-line">${dnn.url || data.url || "Unknown"}</p>
+                    </div>
+                    <span class="confidence-chip">${confidence}% confidence</span>
                   </div>
-                  <p style="margin: 5px 0; font-family: monospace; font-size: 0.9em; word-break: break-all;">${
-                    dnn.url || data.url || "Unknown"
-                  }</p>
-                  
                   ${
                     dnn.probabilities
                       ? `
-                    <div style="margin-top: 10px;">
-                      <small>Probabilities: Legitimate ${(
-                        dnn.probabilities.legitimate * 100
-                      ).toFixed(1)}% | 
-                             Phishing ${(
-                               dnn.probabilities.phishing * 100
-                             ).toFixed(1)}%</small>
+                    <div class="probabilities">
+                      Legitimate ${(dnn.probabilities.legitimate * 100).toFixed(1)}% • 
+                      Phishing ${(dnn.probabilities.phishing * 100).toFixed(1)}%
                     </div>
                   `
                       : ""
                   }
-                  
                   ${featuresHtml}
                 </div>
               </div>`;
@@ -734,7 +898,7 @@
               html += `
               <div class="result-section">
                 <h3>DNN URL Analysis</h3>
-                <div style="padding: 15px; margin: 10px 0; background: #fff5f5; border-radius: 6px; border-left: 4px solid #c53030;">
+                <div class="warning-panel">
                   <strong>Error:</strong> ${dnn.error}
                 </div>
               </div>`;
@@ -773,20 +937,20 @@
             <h3>VirusTotal Security Analysis</h3>
             <div style="padding: 20px; background: ${
               maliciousCount > 0
-                ? "#fff5f5"
+                ? "rgba(245, 101, 101, 0.12)"
                 : suspiciousCount > 0
-                ? "#fff9e6"
-                : "#f0f9ff"
-            }; border-radius: 8px; border-left: 4px solid ${riskColor}; margin-bottom: 20px;">
+                ? "rgba(250, 176, 5, 0.12)"
+                : "rgba(79, 209, 197, 0.12)"
+            }; border-radius: 12px; border: 1px solid var(--border-color); border-left: 4px solid ${riskColor}; margin-bottom: 20px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h4 style="margin: 0; color: ${riskColor};">Risk Level: ${riskLevel}</h4>
-                <span style="font-size: 0.9em; color: #666;">${totalEngines} Security Engines Analyzed</span>
+                <span style="font-size: 0.9em; color: var(--text-tertiary);">${totalEngines} Security Engines Analyzed</span>
               </div>
               
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0;">
-                <div style="padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px solid #c53030;">
+                <div style="padding: 15px; background: var(--bg-primary); border-radius: 10px; text-align: center; border: 1px solid rgba(197, 48, 48, 0.5);">
                   <div style="font-size: 2em; font-weight: bold; color: #c53030; margin-bottom: 5px;">${maliciousCount}</div>
-                  <div style="font-size: 0.9em; color: #666;">Malicious</div>
+                  <div style="font-size: 0.9em; color: var(--text-secondary);">Malicious</div>
                   ${
                     maliciousCount > 0
                       ? `<div style="font-size: 0.8em; color: #c53030; margin-top: 5px;">${(
@@ -797,9 +961,9 @@
                   }
                 </div>
                 
-                <div style="padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px solid #f39c12;">
+                <div style="padding: 15px; background: var(--bg-primary); border-radius: 10px; text-align: center; border: 1px solid rgba(243, 156, 18, 0.5);">
                   <div style="font-size: 2em; font-weight: bold; color: #f39c12; margin-bottom: 5px;">${suspiciousCount}</div>
-                  <div style="font-size: 0.9em; color: #666;">Suspicious</div>
+                  <div style="font-size: 0.9em; color: var(--text-secondary);">Suspicious</div>
                   ${
                     suspiciousCount > 0
                       ? `<div style="font-size: 0.8em; color: #f39c12; margin-top: 5px;">${(
@@ -810,18 +974,18 @@
                   }
                 </div>
                 
-                <div style="padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px solid #0369a1;">
+                <div style="padding: 15px; background: var(--bg-primary); border-radius: 10px; text-align: center; border: 1px solid rgba(3, 105, 161, 0.4);">
                   <div style="font-size: 2em; font-weight: bold; color: #0369a1; margin-bottom: 5px;">${harmlessCount}</div>
-                  <div style="font-size: 0.9em; color: #666;">Harmless</div>
+                  <div style="font-size: 0.9em; color: var(--text-secondary);">Harmless</div>
                   <div style="font-size: 0.8em; color: #0369a1; margin-top: 5px;">${(
                     (harmlessCount / totalEngines) *
                     100
                   ).toFixed(1)}%</div>
                 </div>
                 
-                <div style="padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px solid #95a5a6;">
+                <div style="padding: 15px; background: var(--bg-primary); border-radius: 10px; text-align: center; border: 1px solid rgba(149, 165, 166, 0.4);">
                   <div style="font-size: 2em; font-weight: bold; color: #95a5a6; margin-bottom: 5px;">${undetectedCount}</div>
-                  <div style="font-size: 0.9em; color: #666;">Undetected</div>
+                  <div style="font-size: 0.9em; color: var(--text-secondary);">Undetected</div>
                   <div style="font-size: 0.8em; color: #95a5a6; margin-top: 5px;">${(
                     (undetectedCount / totalEngines) *
                     100
@@ -832,8 +996,8 @@
               ${
                 vt.ip
                   ? `
-              <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
-                <strong>IP Address:</strong> <code style="font-family: monospace; background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${
+              <div style="margin-top: 15px; padding: 12px; background: var(--bg-primary); border-radius: 10px; border: 1px solid var(--border-color);">
+                <strong>IP Address:</strong> <code style="font-family: 'JetBrains Mono', monospace; background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; color: var(--text-primary);">${
                   vt.ip
                 }</code>
                 ${
@@ -860,14 +1024,14 @@
               ${
                 maliciousCount > 0 && vt.last_analysis_results
                   ? `
-              <div style="margin-top: 20px; padding: 15px; background: #fff5f5; border-radius: 6px; border: 1px solid #c53030;">
+              <div style="margin-top: 20px; padding: 15px; background: rgba(245, 101, 101, 0.12); border-radius: 10px; border: 1px solid rgba(245, 101, 101, 0.4);">
                 <h4 style="margin-top: 0; color: #c53030;">Security Engines Flagging as Malicious:</h4>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
                   ${Object.entries(vt.last_analysis_results)
                     .filter(([engine, result]) => result === "malicious")
                     .map(
                       ([engine]) =>
-                        `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 1px solid #c53030; font-size: 0.85em; color: #c53030;">${engine}</span>`
+                        `<span style="padding: 5px 10px; background: var(--bg-primary); border-radius: 6px; border: 1px solid rgba(245, 101, 101, 0.4); font-size: 0.85em; color: #c53030;">${engine}</span>`
                     )
                     .join("")}
                 </div>
@@ -879,14 +1043,14 @@
               ${
                 suspiciousCount > 0 && vt.last_analysis_results
                   ? `
-              <div style="margin-top: 15px; padding: 15px; background: #fff9e6; border-radius: 6px; border: 1px solid #f39c12;">
+              <div style="margin-top: 15px; padding: 15px; background: rgba(250, 176, 5, 0.12); border-radius: 10px; border: 1px solid rgba(243, 156, 18, 0.4);">
                 <h4 style="margin-top: 0; color: #f39c12;">Security Engines Flagging as Suspicious:</h4>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
                   ${Object.entries(vt.last_analysis_results)
                     .filter(([engine, result]) => result === "suspicious")
                     .map(
                       ([engine]) =>
-                        `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 1px solid #f39c12; font-size: 0.85em; color: #f39c12;">${engine}</span>`
+                        `<span style="padding: 5px 10px; background: var(--bg-primary); border-radius: 6px; border: 1px solid rgba(243, 156, 18, 0.4); font-size: 0.85em; color: #f39c12;">${engine}</span>`
                     )
                     .join("")}
                 </div>
@@ -897,15 +1061,15 @@
             </div>
             
             <!-- Security Measures Information -->
-            <div style="margin-top: 20px; padding: 20px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #0369a1;">
-              <h4 style="margin-top: 0; color: #0369a1;">Security Measures</h4>
-              <p style="margin: 10px 0; color: #555; line-height: 1.6;">
+            <div style="margin-top: 20px; padding: 20px; background: rgba(56, 189, 248, 0.12); border-radius: 12px; border-left: 4px solid var(--accent-color); border: 1px solid var(--border-color);">
+              <h4 style="margin-top: 0; color: var(--accent-color);">Security Measures</h4>
+              <p style="margin: 10px 0; color: var(--text-secondary); line-height: 1.6;">
                 <strong>Your device is protected:</strong> This analysis was performed safely through VirusTotal's API. 
                 Your device never directly connects to the suspicious IP address. All security checks are performed 
                 server-side using VirusTotal's threat intelligence database, which aggregates data from ${totalEngines} 
                 security vendors worldwide.
               </p>
-              <ul style="margin: 10px 0; padding-left: 20px; color: #555; line-height: 1.8;">
+              <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
                 <li><strong>No Direct Connection:</strong> Your browser never accesses the IP address directly</li>
                 <li><strong>Server-Side Analysis:</strong> All queries are made from our secure server to VirusTotal</li>
                 <li><strong>Threat Intelligence:</strong> Results are based on VirusTotal's database of ${totalEngines} security engines</li>
@@ -925,7 +1089,7 @@
               ${checks.ip_reports
                 .map((report, idx) => {
                   if (report.error) {
-                    return `<div style="padding: 10px; margin: 5px 0; background: #fff5f5; border-radius: 4px;">
+                    return `<div style="padding: 10px; margin: 5px 0; background: rgba(245, 101, 101, 0.12); border-radius: 6px; border: 1px solid rgba(245, 101, 101, 0.4);">
                     <strong>${report.ip || report.url}:</strong> Error - ${
                       report.error
                     }
@@ -940,28 +1104,28 @@
                       (stats.suspicious || 0) +
                       (stats.undetected || 0);
                     return `<div style="padding: 15px; margin: 10px 0; background: ${
-                      stats.malicious > 0 ? "#fff5f5" : "#f0f9ff"
-                    }; border-radius: 6px;">
-                    <strong>${report.ip || report.url}:</strong><br>
+                      stats.malicious > 0 ? "rgba(245, 101, 101, 0.15)" : "rgba(96, 165, 250, 0.15)"
+                    }; border: 1px solid var(--border-color); border-radius: 6px;">
+                    <strong style="color: var(--text-primary);">${report.ip || report.url}:</strong><br>
                     <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                      <div><strong style="color: #c53030;">Malicious:</strong> ${
+                      <div><strong style="color: var(--error-color);">Malicious:</strong> <span style="color: var(--text-secondary);">${
                         stats.malicious || 0
-                      }</div>
-                      <div><strong style="color: #f39c12;">Suspicious:</strong> ${
+                      }</span></div>
+                      <div><strong style="color: #f39c12;">Suspicious:</strong> <span style="color: var(--text-secondary);">${
                         stats.suspicious || 0
-                      }</div>
-                      <div><strong style="color: #0369a1;">Harmless:</strong> ${
+                      }</span></div>
+                      <div><strong style="color: var(--accent-color);">Harmless:</strong> <span style="color: var(--text-secondary);">${
                         stats.harmless || 0
-                      }</div>
-                      <div><strong style="color: #95a5a6;">Undetected:</strong> ${
+                      }</span></div>
+                      <div><strong style="color: var(--text-tertiary);">Undetected:</strong> <span style="color: var(--text-secondary);">${
                         stats.undetected || 0
-                      }</div>
+                      }</span></div>
                     </div>
-                    <div style="margin-top: 10px; font-size: 0.9em; color: #666;">Total Engines: ${totalEngines}</div>
+                    <div style="margin-top: 10px; font-size: 0.9em; color: var(--text-tertiary);">Total Engines: ${totalEngines}</div>
                   </div>`;
                   }
-                  return `<div style="padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 4px;">
-                   <strong>${
+                  return `<div style="padding: 10px; margin: 5px 0; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary);">
+                   <strong style="color: var(--text-primary);">${
                      report.ip || report.url
                    }:</strong> No detailed report available
                  </div>`;
@@ -974,12 +1138,12 @@
         // Raw Data Section (collapsible)
         html += `
         <div class="result-section">
-          <h3> Raw Analysis Data</h3>
+          <h3>Raw Analysis Data</h3>
           <details>
-            <summary style="cursor: pointer; padding: 10px; background: #f9f9f9; border-radius: 4px; margin-bottom: 10px;">
-              Click to view raw JSON data
+            <summary style="cursor: pointer; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; color: var(--text-secondary); font-weight: 500; user-select: none;">
+              ▼ Click to view raw JSON data
             </summary>
-            <pre style="background: #f9f9f9; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 0.85em;">${JSON.stringify(
+            <pre style="background: var(--bg-primary); padding: 20px; border: 1px solid var(--border-color); border-radius: 6px; overflow-x: auto; font-size: 0.9em; color: var(--text-secondary); line-height: 1.6; margin-top: 10px; max-height: 600px; overflow-y: auto; font-family: 'Courier New', monospace;">${JSON.stringify(
               data,
               null,
               2
@@ -990,8 +1154,242 @@
         contentDiv.innerHTML = html;
       }
 
+      // Get analysis ID from URL
+      function getAnalysisIdFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get("analysis_id");
+      }
+
+      // Store current analysis ID
+      let currentAnalysisId = null;
+
+      // Export results
+      async function exportResults(format) {
+        const analysisId = getAnalysisIdFromURL() || currentAnalysisId;
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+          alert("Please log in to export analyses");
+          window.location.href = "/login";
+          return;
+        }
+
+        // If we have an analysis ID, export from database
+        if (analysisId) {
+          exportAnalysisById(analysisId, format);
+          return;
+        }
+
+        // Otherwise, try to export from LAST_RESULT
+        try {
+          const response = await fetch("/api/last_result", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to get last result");
+          }
+
+          const data = await response.json();
+
+          if (!data || Object.keys(data).length === 0 || data.message) {
+            alert(
+              "No analysis data available to export. Please run an analysis first."
+            );
+            return;
+          }
+
+          // Export directly from data
+          await exportDataDirectly(data, format);
+        } catch (error) {
+          console.error("Export error:", error);
+          alert("Export failed: " + error.message);
+        }
+      }
+
+      // Export data directly (for LAST_RESULT)
+      async function exportDataDirectly(data, format) {
+        const token = localStorage.getItem("access_token");
+
+        try {
+          // Create a temporary analysis in database for export
+          const response = await fetch("/api/export/temp", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ data, format }),
+          });
+
+          if (!response.ok) {
+            // Fallback: download as JSON
+            if (format === "json") {
+              const blob = new Blob([JSON.stringify(data, null, 2)], {
+                type: "application/json",
+              });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `analysis_${new Date().getTime()}.json`;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+            } else {
+              alert(
+                "Please save the analysis to history first to export as PDF or CSV."
+              );
+            }
+            return;
+          }
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          const extension =
+            format === "pdf" ? "pdf" : format === "csv" ? "csv" : "json";
+          a.download = `analysis_${new Date().getTime()}.${extension}`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (error) {
+          console.error("Direct export error:", error);
+          alert("Export failed: " + error.message);
+        }
+      }
+
+      // Export analysis by ID
+      async function exportAnalysisById(analysisId, format) {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          alert("Please log in to export analyses");
+          window.location.href = "/login";
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `/api/export/${analysisId}?format=${format}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Export failed");
+          }
+
+          // Get the blob data
+          const blob = await response.blob();
+
+          // Create download link
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+
+          // Set filename based on format
+          const extension =
+            format === "pdf" ? "pdf" : format === "csv" ? "csv" : "json";
+          a.download = `analysis_${analysisId.substring(0, 8)}.${extension}`;
+
+          // Trigger download
+          document.body.appendChild(a);
+          a.click();
+
+          // Cleanup
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (error) {
+          console.error("Export error:", error);
+          alert("Export failed: " + error.message);
+        }
+      }
+
       // Load results on page load
-      loadResults();
+      const analysisId = getAnalysisIdFromURL();
+      if (analysisId) {
+        loadAnalysisById(analysisId);
+      } else {
+        loadResults();
+      }
+
+      // Load specific analysis by ID
+      async function loadAnalysisById(analysisId) {
+        try {
+          const token = localStorage.getItem("access_token");
+          if (!token) {
+            document.getElementById("loadingSection").style.display = "none";
+            document.getElementById("errorSection").style.display = "block";
+            document.getElementById("errorSection").innerHTML = `
+              <div class="error-message">
+                <p>Please <a href="/login">log in</a> to view analysis details.</p>
+              </div>
+            `;
+            return;
+          }
+
+          const response = await fetch(`/api/history/${analysisId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to load analysis");
+          }
+
+          const analysis = await response.json();
+          displayAnalysis(analysis);
+          document.getElementById("exportButtons").style.display = "flex";
+        } catch (error) {
+          console.error("Error loading analysis:", error);
+          document.getElementById("loadingSection").style.display = "none";
+          document.getElementById("errorSection").style.display = "block";
+          document.getElementById("errorSection").innerHTML = `
+            <div class="error-message">
+              <p>Error loading analysis: ${error.message}</p>
+            </div>
+          `;
+        }
+      }
+
+      // Display analysis from database
+      function displayAnalysis(analysis) {
+        document.getElementById("loadingSection").style.display = "none";
+        document.getElementById("resultsContent").style.display = "block";
+        document.getElementById("exportButtons").style.display = "block";
+
+        currentAnalysisId = analysis.id;
+        const resultData = analysis.result_data || {};
+        displayResults(resultData);
+      }
+
+      // Update displayResults to store analysis ID if available
+      const originalDisplayResults = displayResults;
+      displayResults = function (data) {
+        if (data.analysis_id) {
+          currentAnalysisId = data.analysis_id;
+        }
+        originalDisplayResults(data);
+        // Show export buttons if authenticated (even without ID, we can export from LAST_RESULT)
+        const token = localStorage.getItem("access_token");
+        if (token) {
+          const exportButtons = document.getElementById("exportButtons");
+          if (exportButtons) {
+            exportButtons.style.display = "flex";
+          }
+        }
+      };
     </script>
   </body>
 </html>

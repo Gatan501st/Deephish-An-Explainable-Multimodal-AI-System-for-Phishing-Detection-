@@ -3,10 +3,12 @@
 
 // Get browser API (polyfill handles chrome/browser difference)
 const browserAPI = (typeof browser !== 'undefined' && browser.runtime) ? browser : chrome;
+const EDUCATION_URL = 'http://localhost:5000/education';
+const MAX_EMAIL_TEXT_LENGTH = 20000;
 
 console.log('DeepPhish content script loaded');
 
-// Performance optimization: Debounce function
+// Performance optimization: Debounce + idle scheduling helpers
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -19,8 +21,29 @@ function debounce(func, wait) {
   };
 }
 
+function scheduleIdleTask(task, timeout = 800) {
+  const safeTask = () => {
+    try {
+      task();
+    } catch (err) {
+      console.error('Idle task error:', err);
+    }
+  };
+  
+  if (typeof window !== 'undefined' && window.requestIdleCallback) {
+    window.requestIdleCallback(safeTask, { timeout });
+  } else {
+    setTimeout(safeTask, Math.min(timeout, 500));
+  }
+}
+
 // Track scanned emails to avoid duplicates
 const scannedEmails = new Set();
+const urlScanCache = new Map();
+let lastEmailElement = null;
+let lastEmailId = null;
+let mutationScheduled = false;
+let gmailObserver = null;
 
 // Wait for Gmail to load
 function waitForGmail() {
@@ -100,6 +123,10 @@ function extractEmailData(emailElement) {
     });
   }
   
+  if (emailData.body.length > MAX_EMAIL_TEXT_LENGTH) {
+    emailData.body = emailData.body.slice(0, MAX_EMAIL_TEXT_LENGTH);
+  }
+  
   return emailData;
 }
 
@@ -107,7 +134,14 @@ function extractEmailData(emailElement) {
 function getEmailId(emailElement) {
   const subject = emailElement.querySelector('h2, .hP')?.textContent || '';
   const from = emailElement.querySelector('[email]')?.getAttribute('email') || '';
-  return `${from}-${subject}`.substring(0, 100);
+  if (!subject && !from) {
+    const bodyPreview = emailElement.querySelector('.a3s')?.textContent?.trim() || emailElement.textContent?.trim() || '';
+    if (bodyPreview) {
+      return bodyPreview.substring(0, 120);
+    }
+    return `email-${Date.now()}`;
+  }
+  return `${from}-${subject}`.substring(0, 120);
 }
 
 // Highlight malicious words in email body
@@ -190,9 +224,11 @@ function addSecurityBadge(emailElement, analysisResult) {
   const badge = document.createElement('div');
   badge.className = 'deepphish-badge';
   
-  const isPhishing = analysisResult.nlu_analysis?.is_phishing || false;
-  const confidence = analysisResult.nlu_analysis?.confidence || 0;
-  const explainability = analysisResult.nlu_analysis?.explainability;
+  const nluResult = analysisResult.nlu_analysis;
+  const dnnResult = analysisResult.dnn_analysis;
+  const isPhishing = (nluResult?.is_phishing) || (dnnResult?.is_phishing) || false;
+  const confidence = nluResult?.confidence || dnnResult?.confidence || 0;
+  const explainability = nluResult?.explainability;
   
   // Remove emojis, use text indicators instead
   const statusText = isPhishing ? 'SUSPICIOUS' : 'SAFE';
@@ -208,6 +244,32 @@ function addSecurityBadge(emailElement, analysisResult) {
     });
     concernsHTML += '</ul></div>';
   }
+
+  let dnnConcernsHTML = '';
+  if (dnnResult) {
+    const keyConcerns = dnnResult.summary?.key_concerns || [];
+    const indicators = dnnResult.detailed?.top_phishing_indicators || [];
+    const combined = keyConcerns.length ? keyConcerns : indicators.map(ind => ind.description || ind.feature || 'Suspicious indicator');
+    if (combined.length) {
+      dnnConcernsHTML = '<div class="deepphish-concerns"><strong>URL Indicators:</strong><ul>';
+      combined.slice(0, 5).forEach(item => {
+        dnnConcernsHTML += `<li>${item}</li>`;
+      });
+      dnnConcernsHTML += '</ul></div>';
+    }
+  }
+  
+  let educationHTML = '';
+  if (isPhishing) {
+    educationHTML = `
+      <div class="deepphish-education">
+        <span>Learn how to spot similar attacks.</span>
+        <a href="${EDUCATION_URL}" target="_blank" rel="noopener noreferrer">
+          Open Education Page →
+        </a>
+      </div>
+    `;
+  }
   
   badge.innerHTML = `
     <div class="deepphish-badge-content ${statusClass}">
@@ -218,6 +280,8 @@ function addSecurityBadge(emailElement, analysisResult) {
       <span class="deepphish-confidence">${(confidence * 100).toFixed(0)}%</span>
     </div>
     ${concernsHTML}
+    ${dnnConcernsHTML}
+    ${educationHTML}
   `;
   
   // Insert badge at the top of email - try multiple locations
@@ -233,18 +297,68 @@ function addSecurityBadge(emailElement, analysisResult) {
     }
   }
   
-  // Highlight malicious words in body
+  // Highlight malicious words in body (idle to avoid blocking UI)
   if (isPhishing && explainability) {
-    highlightMaliciousWords(emailElement, analysisResult);
+    scheduleIdleTask(() => highlightMaliciousWords(emailElement, analysisResult), 1200);
   }
+}
+
+function unwrapElements(root, selector) {
+  root.querySelectorAll(selector).forEach((el) => {
+    const textNode = document.createTextNode(el.textContent || '');
+    el.replaceWith(textNode);
+  });
+}
+
+function cleanupEmailElement(emailElement, emailId) {
+  if (!emailElement) return;
+  emailElement.querySelectorAll('.deepphish-badge').forEach((badge) => badge.remove());
+  unwrapElements(emailElement, '.deepphish-highlight');
+  unwrapElements(emailElement, '.deepphish-suspicious-url');
+  delete emailElement.dataset.deepphishScanned;
+  delete emailElement.dataset.deepphishScanning;
+  delete emailElement.dataset.deepphishPending;
+  delete emailElement.dataset.deepphishRendered;
+  if (emailId && scannedEmails.has(emailId)) {
+    scannedEmails.delete(emailId);
+  }
+}
+
+function findActiveEmailElement() {
+  const main = document.querySelector('[role="main"]');
+  if (!main) return null;
+
+  const selectorGroups = [
+    '.nH.if .nH',
+    '.nH.if',
+    '.nH.hx',
+    '.adn',
+    '.nH[role="presentation"]',
+    '.aeF'
+  ];
+
+  for (const selector of selectorGroups) {
+    const candidates = main.querySelectorAll(selector);
+    for (const candidate of candidates) {
+      if (candidate.querySelector('.a3s')) {
+        return candidate;
+      }
+    }
+  }
+
+  if (main.querySelector('.a3s')) {
+    return main;
+  }
+
+  return null;
 }
 
 // Scan email when opened (optimized with caching)
 async function scanEmail(emailElement) {
   const emailId = getEmailId(emailElement);
   
-  // Skip if already scanned
-  if (scannedEmails.has(emailId)) {
+  // Skip if already scanned and rendered
+  if (scannedEmails.has(emailId) && emailElement.dataset.deepphishRendered === 'true') {
     return;
   }
   
@@ -257,7 +371,10 @@ async function scanEmail(emailElement) {
   const emailData = extractEmailData(emailElement);
   
   // Combine subject and body for analysis
-  const fullText = `${emailData.subject}\n\n${emailData.body}`;
+  let fullText = `${emailData.subject}\n\n${emailData.body}`;
+  if (fullText.length > MAX_EMAIL_TEXT_LENGTH) {
+    fullText = fullText.slice(0, MAX_EMAIL_TEXT_LENGTH);
+  }
   
   if (!fullText.trim() || fullText.length < 10) {
     console.log('No email content to analyze');
@@ -276,6 +393,8 @@ async function scanEmail(emailElement) {
       addSecurityBadge(emailElement, response.result);
       scannedEmails.add(emailId);
       emailElement.dataset.deepphishScanned = 'true';
+      emailElement.dataset.deepphishRendered = 'true';
+      scheduleIdleTask(() => analyzeUrlsForEmail(emailElement, emailData, response.result), 1400);
     } else if (response && response.error) {
       // Handle authentication errors
       if (response.error.includes('Authentication required')) {
@@ -294,30 +413,7 @@ async function scanEmail(emailElement) {
           emailHeader.insertBefore(errorBadge, emailHeader.firstChild);
         }
       }
-      scannedEmails.add(emailId);
-      
-      // Analyze URLs if found (limit to 3 for performance)
-      if (emailData.urls.length > 0) {
-        const urlsToScan = emailData.urls.slice(0, 3);
-        // Process URLs in parallel but limit concurrency
-        const urlPromises = urlsToScan.map(async (url) => {
-          try {
-            const urlResponse = await browserAPI.runtime.sendMessage({
-              action: 'analyzeURL',
-              url: url
-            });
-            // Add URL warnings if needed
-            if (urlResponse && urlResponse.success && urlResponse.result.dnn_analysis?.is_phishing) {
-              highlightSuspiciousURL(url, emailElement);
-            }
-          } catch (error) {
-            console.error('URL analysis error:', error);
-          }
-        });
-        
-        // Don't wait for all URL scans to complete
-        Promise.all(urlPromises).catch(err => console.error('URL scan error:', err));
-      }
+      scheduleIdleTask(() => analyzeUrlsForEmail(emailElement, emailData, response?.result), 1500);
     } else {
       console.error('Email analysis failed:', response?.error);
     }
@@ -329,7 +425,7 @@ async function scanEmail(emailElement) {
 }
 
 // Highlight suspicious URLs in email
-function highlightSuspiciousURL(url, emailElement) {
+function highlightSuspiciousURL(url, emailElement, warningText) {
   // Only highlight if not already highlighted
   if (emailElement.querySelector(`.deepphish-suspicious-url[data-url="${url}"]`)) {
     return;
@@ -342,78 +438,154 @@ function highlightSuspiciousURL(url, emailElement) {
     const bodyEl = emailElement.querySelector(selector);
     if (bodyEl && bodyEl.innerHTML.includes(url)) {
       bodyEl.innerHTML = bodyEl.innerHTML.replace(urlRegex, (match) => {
-        return `<span class="deepphish-suspicious-url" data-url="${url}" title="Suspicious URL detected by DeepPhish">${match}</span>`;
+        const title = warningText || 'Suspicious URL detected by DeepPhish';
+        return `<span class="deepphish-suspicious-url" data-url="${url}" title="${title}">${match}</span>`;
       });
       break;
     }
   }
 }
 
+async function analyzeUrlsForEmail(emailElement, emailData, baseResult) {
+  if (!emailData.urls || emailData.urls.length === 0) return;
+
+  const urlsToScan = emailData.urls.slice(0, 3);
+  for (const url of urlsToScan) {
+    const cacheKey = `${lastEmailId || ''}-${url}`;
+    if (urlScanCache.has(cacheKey)) {
+      continue;
+    }
+    urlScanCache.set(cacheKey, true);
+    try {
+      const urlResponse = await browserAPI.runtime.sendMessage({
+        action: 'analyzeURL',
+        url: url
+      });
+      if (urlResponse && urlResponse.success && urlResponse.result) {
+        const urlResult = urlResponse.result;
+        const dnnAnalysis = urlResult.dnn_analysis || urlResult;
+        if (dnnAnalysis?.is_phishing) {
+          highlightSuspiciousURL(
+            url,
+            emailElement,
+            urlResult.summary?.key_concerns?.[0] || 'URL flagged as phishing'
+          );
+          const combinedResult = {
+            ...baseResult,
+            dnn_analysis: dnnAnalysis
+          };
+          addSecurityBadge(emailElement, combinedResult);
+          emailElement.dataset.deepphishRendered = 'true';
+        }
+      }
+    } catch (error) {
+      console.error('URL analysis error:', error);
+    }
+  }
+}
+
 // Debounced scan function to avoid excessive scanning
 const debouncedScan = debounce((emailElement) => {
-  if (emailElement && !emailElement.dataset.deepphishScanned) {
-    emailElement.dataset.deepphishScanned = 'true';
-    scanEmail(emailElement);
-  }
+  if (!emailElement) return;
+  if (emailElement.dataset.deepphishPending === 'true') return;
+  emailElement.dataset.deepphishPending = 'true';
+  scanEmail(emailElement).finally(() => {
+    delete emailElement.dataset.deepphishPending;
+  });
 }, 500);
 
 // Listen for messages from popup
 browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'scanCurrentEmail') {
-    const currentEmail = document.querySelector('[role="main"]');
-    if (currentEmail) {
-      // Clear cached scan for manual rescan
-      const emailId = getEmailId(currentEmail);
-      scannedEmails.delete(emailId);
-      currentEmail.dataset.deepphishScanned = 'false';
-      
-      scanEmail(currentEmail).then(() => {
+    console.log('Content script: Received scanCurrentEmail request');
+    
+    // Use async handler for proper response
+    (async () => {
+      try {
+        // Try multiple selectors for Gmail's email view
+        const currentEmail = findActiveEmailElement();
+        
+        if (!currentEmail) {
+          console.error('Content script: No email element found');
+          sendResponse({ success: false, error: 'No email open. Please open an email in Gmail first.' });
+          return;
+        }
+        
+        console.log('Content script: Email element found, starting scan...');
+        
+        // Clear cached scan for manual rescan
+        const emailId = getEmailId(currentEmail);
+        scannedEmails.delete(emailId);
+        delete currentEmail.dataset.deepphishScanned;
+        delete currentEmail.dataset.deepphishScanning;
+        delete currentEmail.dataset.deepphishRendered;
+        
+        await scanEmail(currentEmail);
+        console.log('Content script: Scan completed successfully');
         sendResponse({ success: true });
-      }).catch(error => {
-        sendResponse({ success: false, error: error.message });
-      });
-      return true;
-    } else {
-      sendResponse({ success: false, error: 'No email open' });
-    }
+      } catch (error) {
+        console.error('Content script: Scan error:', error);
+        sendResponse({ success: false, error: error.message || 'Unknown error occurred' });
+      }
+    })();
+    
+    return true; // Keep channel open for async response
   }
 });
 
 // Optimized observer with debouncing
-function initializeObserver() {
-  let lastEmailElement = null;
-  
-  const observer = new MutationObserver((mutations) => {
-    // Use requestIdleCallback for better performance if available
-    const processMutation = () => {
-      const currentEmail = document.querySelector('[role="main"]');
-      
-      // Only process if email changed
-      if (currentEmail && currentEmail !== lastEmailElement) {
-        lastEmailElement = currentEmail;
-        const emailId = getEmailId(currentEmail);
-        
-        // Skip if already scanned
-        if (!scannedEmails.has(emailId) && !currentEmail.dataset.deepphishScanned) {
-          debouncedScan(currentEmail);
-        }
-      }
-    };
-    
-    // Use requestIdleCallback for non-blocking processing
-    if (window.requestIdleCallback) {
-      requestIdleCallback(processMutation, { timeout: 1000 });
-    } else {
-      setTimeout(processMutation, 100);
+function handleEmailViewChange() {
+  const currentEmail = findActiveEmailElement();
+
+  if (!currentEmail) {
+    if (lastEmailElement) {
+      cleanupEmailElement(lastEmailElement, lastEmailId);
+      lastEmailElement = null;
+      lastEmailId = null;
     }
+    return;
+  }
+
+  const currentId = getEmailId(currentEmail);
+  if (!currentId) {
+    return;
+  }
+
+  if (lastEmailId && currentId !== lastEmailId && lastEmailElement) {
+    cleanupEmailElement(lastEmailElement, lastEmailId);
+  }
+
+  lastEmailElement = currentEmail;
+  lastEmailId = currentId;
+
+  if (!scannedEmails.has(currentId) || currentEmail.dataset.deepphishRendered !== 'true') {
+    debouncedScan(currentEmail);
+  }
+}
+
+function initializeObserver() {
+  if (gmailObserver) {
+    gmailObserver.disconnect();
+  }
+  
+  gmailObserver = new MutationObserver(() => {
+    if (mutationScheduled) return;
+    mutationScheduled = true;
+    scheduleIdleTask(() => {
+      mutationScheduled = false;
+      handleEmailViewChange();
+    }, 600);
   });
   
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
+  const target = document.querySelector('[role="main"]') || document.body;
+  if (target) {
+    gmailObserver.observe(target, {
+      childList: true,
+      subtree: true
+    });
+  }
   
-  return observer;
+  return gmailObserver;
 }
 
 // Initialize when Gmail loads
@@ -422,12 +594,13 @@ waitForGmail().then(() => {
   
   // Initialize observer
   initializeObserver();
+  handleEmailViewChange();
   
   // Scan current email if already open (with delay to ensure content is loaded)
   setTimeout(() => {
-    const currentEmail = document.querySelector('[role="main"]');
+    const currentEmail = findActiveEmailElement();
     if (currentEmail) {
-      scanEmail(currentEmail);
+      debouncedScan(currentEmail);
     }
   }, 1500);
 });

@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+  "name": "Simple Test",
+  "version": "1.0.0",
+  "description": "Minimal test extension",
+  "permissions": [],
+  "browser_action": {
+    "default_title": "Test"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "simpletest@test.com"
+    }
+  }
+}
+

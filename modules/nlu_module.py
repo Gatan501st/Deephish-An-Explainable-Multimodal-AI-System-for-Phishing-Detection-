@@ -133,6 +133,83 @@ def get_word_importance(text: str) -> List[Dict[str, Any]]:
             "alert",
             "breach",
         ]
+        
+        # Common legitimate words that should NOT be flagged as suspicious
+        # These are frequently used in legitimate emails and shouldn't trigger alerts
+        safe_words = [
+            "conversations",
+            "conversation",
+            "message",
+            "messages",
+            "email",
+            "emails",
+            "reply",
+            "replies",
+            "forward",
+            "forwarded",
+            "attachment",
+            "attachments",
+            "meeting",
+            "meetings",
+            "calendar",
+            "event",
+            "events",
+            "notification",
+            "notifications",
+            "reminder",
+            "reminders",
+            "discussion",
+            "discussions",
+            "thread",
+            "threads",
+            "subject",
+            "subjects",
+            "header",
+            "headers",
+            "content",
+            "body",
+            "text",
+            "document",
+            "documents",
+            "file",
+            "files",
+            "folder",
+            "folders",
+            "inbox",
+            "sent",
+            "draft",
+            "drafts",
+            "archive",
+            "archived",
+            "search",
+            "filter",
+            "settings",
+            "preferences",
+            "help",
+            "support",
+            "contact",
+            "address",
+            "addresses",
+            "phone",
+            "number",
+            "date",
+            "time",
+            "today",
+            "tomorrow",
+            "yesterday",
+            "week",
+            "month",
+            "year",
+            "thanks",
+            "thank",
+            "regards",
+            "sincerely",
+            "best",
+            "hello",
+            "hi",
+            "dear",
+            "greetings",
+        ]
 
         # Test importance by removing each word and measuring impact
         for i, word in enumerate(words):
@@ -153,9 +230,15 @@ def get_word_importance(text: str) -> List[Dict[str, Any]]:
             except:
                 importance = 0.0
 
-            # Check if it's a known phishing keyword
+            # Check if it's a known phishing keyword or safe word
             clean_word = word.lower().strip()
             is_keyword = any(keyword in clean_word for keyword in phishing_keywords)
+            # Check if word is in safe words list (exact match or word contains safe word)
+            is_safe_word = clean_word in safe_words
+
+            # Skip safe words entirely - they shouldn't be flagged
+            if is_safe_word:
+                continue
 
             # Boost importance if it's a known keyword
             if is_keyword:
@@ -234,9 +317,29 @@ def highlight_suspicious_words(
     suspicious_phrases = []
     top_concerns = []
 
+    # Common legitimate words that should NOT be flagged
+    safe_words = [
+        "conversations", "conversation", "message", "messages", "email", "emails",
+        "reply", "replies", "forward", "forwarded", "attachment", "attachments",
+        "meeting", "meetings", "calendar", "event", "events", "notification", "notifications",
+        "reminder", "reminders", "discussion", "discussions", "thread", "threads",
+        "subject", "subjects", "header", "headers", "content", "body", "text",
+        "document", "documents", "file", "files", "folder", "folders",
+        "inbox", "sent", "draft", "drafts", "archive", "archived",
+        "search", "filter", "settings", "preferences", "help", "support", "contact",
+        "address", "addresses", "phone", "number", "date", "time",
+        "today", "tomorrow", "yesterday", "week", "month", "year",
+        "thanks", "thank", "regards", "sincerely", "best", "hello", "hi", "dear", "greetings",
+    ]
+    
     for word_data in top_words:
+        token = word_data["clean_token"]
+        
+        # Skip safe words - they should never be flagged
+        if token in safe_words:
+            continue
+            
         if word_data["importance"] > 0.1:  # Threshold for suspicious
-            token = word_data["clean_token"]
             if len(token) > 2:  # Ignore very short tokens
                 suspicious_phrases.append(
                     {

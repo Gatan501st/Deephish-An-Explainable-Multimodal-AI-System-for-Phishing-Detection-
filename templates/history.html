@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Analysis History — DeepPhish</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <style>
+      .history-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .filters-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 8px var(--shadow);
+      }
+
+      .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .filter-group label {
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: var(--text-tertiary);
+      }
+
+      .filter-group select,
+      .filter-group input {
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+      }
+
+      .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .history-item {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 2px 8px var(--shadow);
+      }
+
+      .history-item:hover {
+        box-shadow: 0 4px 12px var(--shadow-hover);
+        border-color: var(--accent-color);
+      }
+
+      .history-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 10px;
+      }
+
+      .history-item-type {
+        font-weight: bold;
+        color: #667eea;
+        text-transform: uppercase;
+      }
+
+      .history-item-date {
+        color: #999;
+        font-size: 0.9em;
+      }
+
+      .history-item-risk {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+
+      .risk-high {
+        background: #fee;
+        color: #c53030;
+      }
+
+      .risk-medium {
+        background: #fff5e6;
+        color: #f39c12;
+      }
+
+      .risk-low {
+        background: #f0f9ff;
+        color: #0369a1;
+      }
+
+      .history-item-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-secondary {
+        background: #f5f5f5;
+        color: #333;
+      }
+
+      .btn-danger {
+        background: #fee;
+        color: #c53030;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 30px;
+      }
+
+      .pagination button {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      .pagination button.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+      }
+
+      .export-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="/" style="text-decoration: none; color: inherit">
+        <div class="logo-section">
+          <div class="shield-icon">DP</div>
+          <div class="logo-text">
+            <h1>DeepPhish</h1>
+            <p>Advanced Email Security Analysis</p>
+          </div>
+        </div>
+      </a>
+      <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <span class="theme-toggle-icon" id="themeIcon">Dark</span>
+        </button>
+        <a href="/" class="header-btn">Home</a>
+        <a href="/dashboard" class="header-btn">Dashboard</a>
+        <a href="/profile" class="header-btn">Profile</a>
+        <a href="/settings" class="header-btn">Settings</a>
+        <a href="/about" class="header-btn">About</a>
+      </div>
+    </div>
+
+    <div class="history-container">
+      <h2 style="margin-bottom: 30px">Analysis History</h2>
+
+      <!-- Filters -->
+      <div class="filters-section">
+        <h3 style="margin-bottom: 15px">Filters</h3>
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label for="filterType">Analysis Type</label>
+            <select id="filterType">
+              <option value="">All Types</option>
+              <option value="full">Full Analysis</option>
+              <option value="nlu">NLU Analysis</option>
+              <option value="url">URL Analysis</option>
+              <option value="attachment">Attachment Scan</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterPhishing">Phishing Status</label>
+            <select id="filterPhishing">
+              <option value="">All</option>
+              <option value="true">Phishing Detected</option>
+              <option value="false">Safe</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterRisk">Risk Level</label>
+            <select id="filterRisk">
+              <option value="">All Levels</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="searchInput">Search</label>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search analyses..."
+            />
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="applyFilters()">
+          Apply Filters
+        </button>
+        <button class="btn btn-secondary" onclick="clearFilters()">
+          Clear
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingSection" class="loading" style="display: none">
+        <div class="spinner"></div>
+        <div>Loading history...</div>
+      </div>
+
+      <!-- History List -->
+      <div id="historyList" class="history-list"></div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state" style="display: none">
+        <p>No analysis history found.</p>
+        <p>Start analyzing emails to see your history here.</p>
+      </div>
+
+      <!-- Pagination -->
+      <div id="pagination" class="pagination" style="display: none"></div>
+    </div>
+
+    <script>
+      let currentPage = 0;
+      const pageSize = 20;
+      let currentFilters = {};
+
+      // Get auth token
+      function getAuthToken() {
+        return localStorage.getItem("access_token");
+      }
+
+      // Get auth headers
+      function getAuthHeaders() {
+        const headers = {
+          "Content-Type": "application/json",
+        };
+        const token = getAuthToken();
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        return headers;
+      }
+
+      // Load history
+      async function loadHistory(page = 0) {
+        document.getElementById("loadingSection").style.display = "block";
+        document.getElementById("historyList").innerHTML = "";
+        document.getElementById("emptyState").style.display = "none";
+
+        try {
+          const params = new URLSearchParams({
+            limit: pageSize,
+            offset: page * pageSize,
+            ...currentFilters,
+          });
+
+          const response = await fetch(`/api/history?${params}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              window.location.href = "/login";
+              return;
+            }
+            throw new Error("Failed to load history");
+          }
+
+          const data = await response.json();
+          displayHistory(data.history || []);
+          updatePagination(page, Math.ceil((data.count || 0) / pageSize));
+
+          if (data.history.length === 0) {
+            document.getElementById("emptyState").style.display = "block";
+          }
+        } catch (error) {
+          console.error("Error loading history:", error);
+          document.getElementById("historyList").innerHTML =
+            '<div class="empty-state"><p>Error loading history. Please try again.</p></div>';
+        } finally {
+          document.getElementById("loadingSection").style.display = "none";
+        }
+      }
+
+      // Display history
+      function displayHistory(history) {
+        const historyList = document.getElementById("historyList");
+        historyList.innerHTML = "";
+
+        history.forEach((item) => {
+          const historyItem = document.createElement("div");
+          historyItem.className = "history-item";
+
+          const riskClass =
+            item.risk_level === "HIGH"
+              ? "risk-high"
+              : item.risk_level === "MEDIUM"
+              ? "risk-medium"
+              : "risk-low";
+
+          const date = new Date(item.created_at).toLocaleString();
+
+          historyItem.innerHTML = `
+            <div class="history-item-header">
+              <div>
+                <span class="history-item-type">${item.analysis_type.toUpperCase()}</span>
+                <div class="history-item-date">${date}</div>
+              </div>
+              <span class="history-item-risk ${riskClass}">${
+            item.risk_level || "UNKNOWN"
+          }</span>
+            </div>
+            <div>
+              <p><strong>Phishing Detected:</strong> ${
+                item.is_phishing ? "Yes" : "No"
+              }</p>
+              ${
+                item.confidence
+                  ? `<p><strong>Confidence:</strong> ${(
+                      item.confidence * 100
+                    ).toFixed(1)}%</p>`
+                  : ""
+              }
+            </div>
+            <div class="history-item-actions">
+              <button class="btn btn-primary" onclick="viewAnalysis('${
+                item.id
+              }')">View Details</button>
+              <div class="export-buttons">
+                <button class="btn btn-secondary" onclick="exportAnalysis('${
+                  item.id
+                }', 'json')">JSON</button>
+                <button class="btn btn-secondary" onclick="exportAnalysis('${
+                  item.id
+                }', 'pdf')">PDF</button>
+                <button class="btn btn-secondary" onclick="exportAnalysis('${
+                  item.id
+                }', 'csv')">CSV</button>
+              </div>
+              <button class="btn btn-danger" onclick="reportFeedback('${
+                item.id
+              }')">Report Issue</button>
+            </div>
+          `;
+
+          historyList.appendChild(historyItem);
+        });
+      }
+
+      // Update pagination
+      function updatePagination(current, totalPages) {
+        const pagination = document.getElementById("pagination");
+        if (totalPages <= 1) {
+          pagination.style.display = "none";
+          return;
+        }
+
+        pagination.style.display = "flex";
+        pagination.innerHTML = "";
+
+        // Previous button
+        const prevBtn = document.createElement("button");
+        prevBtn.textContent = "Previous";
+        prevBtn.disabled = current === 0;
+        prevBtn.onclick = () => {
+          currentPage--;
+          loadHistory(currentPage);
+        };
+        pagination.appendChild(prevBtn);
+
+        // Page numbers
+        for (let i = 0; i < totalPages; i++) {
+          const pageBtn = document.createElement("button");
+          pageBtn.textContent = i + 1;
+          pageBtn.className = i === current ? "active" : "";
+          pageBtn.onclick = () => {
+            currentPage = i;
+            loadHistory(currentPage);
+          };
+          pagination.appendChild(pageBtn);
+        }
+
+        // Next button
+        const nextBtn = document.createElement("button");
+        nextBtn.textContent = "Next";
+        nextBtn.disabled = current === totalPages - 1;
+        nextBtn.onclick = () => {
+          currentPage++;
+          loadHistory(currentPage);
+        };
+        pagination.appendChild(nextBtn);
+      }
+
+      // Apply filters
+      function applyFilters() {
+        currentFilters = {};
+        const type = document.getElementById("filterType").value;
+        const phishing = document.getElementById("filterPhishing").value;
+        const risk = document.getElementById("filterRisk").value;
+
+        if (type) currentFilters.type = type;
+        if (phishing) currentFilters.is_phishing = phishing === "true";
+        if (risk) currentFilters.risk_level = risk;
+
+        currentPage = 0;
+        loadHistory(currentPage);
+      }
+
+      // Clear filters
+      function clearFilters() {
+        document.getElementById("filterType").value = "";
+        document.getElementById("filterPhishing").value = "";
+        document.getElementById("filterRisk").value = "";
+        document.getElementById("searchInput").value = "";
+        currentFilters = {};
+        currentPage = 0;
+        loadHistory(currentPage);
+      }
+
+      // View analysis
+      function viewAnalysis(analysisId) {
+        window.location.href = `/results?analysis_id=${analysisId}`;
+      }
+
+      // Export analysis
+      function exportAnalysis(analysisId, format) {
+        const token = getAuthToken();
+        if (!token) {
+          alert("Please log in to export analyses");
+          return;
+        }
+
+        window.location.href = `/api/export/${analysisId}?format=${format}`;
+      }
+
+      // Report feedback
+      function reportFeedback(analysisId) {
+        const feedbackType = prompt(
+          "Is this a false positive or false negative?\n1. False Positive (safe marked as phishing)\n2. False Negative (phishing marked as safe)"
+        );
+
+        if (!feedbackType) return;
+
+        const type =
+          feedbackType === "1" ||
+          feedbackType.toLowerCase().includes("positive")
+            ? "false_positive"
+            : "false_negative";
+
+        const comments = prompt(
+          "Please provide additional comments (optional):"
+        );
+
+        fetch("/api/feedback", {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            analysis_id: analysisId,
+            feedback_type: type,
+            comments: comments || "",
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.id) {
+              alert("Thank you for your feedback!");
+            } else {
+              alert(
+                "Error submitting feedback: " + (data.error || "Unknown error")
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Error submitting feedback");
+          });
+      }
+
+      // Load history on page load
+      loadHistory();
+    </script>
+  </body>
+</html>

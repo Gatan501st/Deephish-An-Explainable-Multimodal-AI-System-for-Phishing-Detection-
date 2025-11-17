@@ -18,66 +18,52 @@
             <span class="status-dot"></span>
             <span id="statusText">Checking connection...</span>
           </div>
-          <div
-            class="auth-section"
-            style="
-              margin-top: 10px;
-              padding: 10px;
-              background: #f5f5f5;
-              border-radius: 6px;
-            "
-          >
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-              "
-            >
+          <div class="auth-section">
+            <div id="authStatusContainer" class="auth-status-container">
               <div>
                 <div id="authStatus" class="auth-status">Checking...</div>
-                <div
-                  id="userEmail"
-                  style="
-                    font-size: 0.85em;
-                    color: #666;
-                    margin-top: 4px;
-                    display: none;
-                  "
-                ></div>
+                <div id="userEmail" class="user-email"></div>
               </div>
-              <div style="display: flex; gap: 8px">
-                <button
-                  id="loginBtn"
-                  style="
-                    display: none;
-                    padding: 6px 12px;
-                    background: #667eea;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-size: 0.85em;
-                  "
-                >
+              <div class="auth-buttons">
+                <button id="loginBtn" class="auth-btn-small" style="display: none;">
                   Login
                 </button>
-                <button
-                  id="logoutBtn"
-                  style="
-                    display: none;
-                    padding: 6px 12px;
-                    background: #999;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-size: 0.85em;
-                  "
-                >
+                <button id="logoutBtn" class="auth-btn-small" style="display: none;">
                   Logout
                 </button>
               </div>
+            </div>
+            
+            <!-- Login Form (shown when not authenticated) -->
+            <div id="loginFormContainer" class="login-form-container" style="display: none;">
+              <form id="loginForm" class="login-form">
+                <div class="form-group">
+                  <label for="loginEmail">Email</label>
+                  <input
+                    type="email"
+                    id="loginEmail"
+                    name="email"
+                    required
+                    placeholder="your@email.com"
+                    class="form-input"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="loginPassword">Password</label>
+                  <input
+                    type="password"
+                    id="loginPassword"
+                    name="password"
+                    required
+                    placeholder="••••••••"
+                    class="form-input"
+                  />
+                </div>
+                <div id="loginError" class="login-error" style="display: none;"></div>
+                <button type="submit" id="loginSubmitBtn" class="login-submit-btn">
+                  Login
+                </button>
+              </form>
             </div>
           </div>
         </div>
@@ -97,8 +83,8 @@
           <button id="scanCurrentEmail" class="action-btn">
             Scan Current Email
           </button>
-          <button id="viewSettings" class="action-btn secondary">
-            Settings
+          <button id="viewProfile" class="action-btn secondary">
+            Profile
           </button>
         </div>
 

@@ -32,7 +32,7 @@ def get_supabase() -> Optional[Client]:
 
 def verify_token(token: str) -> Optional[Dict[str, Any]]:
     """
-    Verify JWT token from Supabase
+    Verify JWT token from Supabase and get user role
     Returns user data if token is valid, None otherwise
     """
     if not supabase or not SUPABASE_URL:
@@ -52,10 +52,34 @@ def verify_token(token: str) -> Optional[Dict[str, Any]]:
         
         if response.status_code == 200:
             user_data = response.json()
+            user_id = user_data.get("id")
+            user_email = user_data.get("email")
+            
+            # Get user role from database
+            role = "user"  # default role
+            try:
+                if supabase:
+                    profile_response = supabase.table("user_profiles").select("role").eq("id", user_id).execute()
+                    if profile_response.data and len(profile_response.data) > 0:
+                        role = profile_response.data[0].get("role", "user")
+            except Exception as e:
+                print(f"Error fetching user role: {e}")
+                # If profile doesn't exist, create it with default role
+                try:
+                    if supabase:
+                        supabase.table("user_profiles").insert({
+                            "id": user_id,
+                            "email": user_email,
+                            "role": "user"
+                        }).execute()
+                except Exception as e2:
+                    print(f"Error creating user profile: {e2}")
+            
             return {
-                "id": user_data.get("id"),
-                "email": user_data.get("email"),
+                "id": user_id,
+                "email": user_email,
                 "email_verified": user_data.get("email_confirmed_at") is not None,
+                "role": role,
             }
         else:
             print(f"Token verification failed: HTTP {response.status_code}")
@@ -67,24 +91,45 @@ def verify_token(token: str) -> Optional[Dict[str, Any]]:
 
 def require_auth(f):
     """
-    Decorator to require authentication for API endpoints
+    Decorator to require authentication for API endpoints and web pages
+    Supports both API (Authorization header) and web (session/localStorage via redirect)
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Check for token in Authorization header
+        from flask import redirect, url_for
+        
+        # Check for token in Authorization header (API request)
         auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
-            return jsonify({"error": "Authentication required", "code": "UNAUTHORIZED"}), 401
+        is_api_request = auth_header.startswith("Bearer ")
         
-        token = auth_header.replace("Bearer ", "")
-        user = verify_token(token)
-        
-        if not user:
-            return jsonify({"error": "Invalid or expired token", "code": "INVALID_TOKEN"}), 401
-        
-        # Attach user to request
-        request.current_user = user
-        return f(*args, **kwargs)
+        if is_api_request:
+            # API request - check Authorization header
+            token = auth_header.replace("Bearer ", "")
+            user = verify_token(token)
+            
+            if not user:
+                return jsonify({"error": "Invalid or expired token", "code": "INVALID_TOKEN"}), 401
+            
+            # Attach user to request
+            request.current_user = user
+            return f(*args, **kwargs)
+        else:
+            # Web page request - check for token in session or query params
+            # For now, we'll check if it's a JSON request vs HTML request
+            wants_json = request.headers.get("Accept", "").startswith("application/json")
+            
+            # Try to get token from session (if we add session support) or require client-side redirect
+            # For now, return 401 and let client handle redirect
+            if wants_json:
+                return jsonify({"error": "Authentication required", "code": "UNAUTHORIZED", "redirect": "/login"}), 401
+            else:
+                # For HTML requests, check if user has token in localStorage (client-side)
+                # We can't access localStorage server-side, so we'll return the page
+                # and let JavaScript handle auth check
+                # Alternatively, we could use cookies/sessions
+                # For now, allow the page to load and let client-side JS handle auth
+                request.current_user = None  # Will be set by client-side JS if authenticated
+                return f(*args, **kwargs)
     
     return decorated_function
 
@@ -105,4 +150,50 @@ def optional_auth(f):
         return f(*args, **kwargs)
     
     return decorated_function
+
+
+def require_admin(f):
+    """
+    Decorator to require admin role for API endpoints
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check for token in Authorization header
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Authentication required", "code": "UNAUTHORIZED"}), 401
+        
+        token = auth_header.replace("Bearer ", "")
+        user = verify_token(token)
+        
+        if not user:
+            return jsonify({"error": "Invalid or expired token", "code": "INVALID_TOKEN"}), 401
+        
+        # Check if user is admin
+        if user.get("role") != "admin":
+            return jsonify({"error": "Admin access required", "code": "FORBIDDEN"}), 403
+        
+        # Attach user to request
+        request.current_user = user
+        return f(*args, **kwargs)
+    
+    return decorated_function
+
+
+def is_admin(user: Dict[str, Any]) -> bool:
+    """
+    Check if user is an admin
+    """
+    return user.get("role") == "admin" if user else False
+
+
+def can_access_resource(user: Dict[str, Any], resource_user_id: str) -> bool:
+    """
+    Check if user can access a resource (either owner or admin)
+    """
+    if not user:
+        return False
+    if is_admin(user):
+        return True
+    return user.get("id") == resource_user_id
 

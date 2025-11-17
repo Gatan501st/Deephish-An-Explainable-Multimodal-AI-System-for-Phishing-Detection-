@@ -16,6 +16,10 @@ def save_analysis_history(
     analysis_type: str,
     result_data: Dict[str, Any],
     input_data: Optional[Dict[str, Any]] = None,
+    is_phishing: Optional[bool] = None,
+    risk_level: Optional[str] = None,
+    risk_score: Optional[float] = None,
+    confidence: Optional[float] = None,
 ) -> Optional[str]:
     """
     Save analysis result to database
@@ -26,40 +30,53 @@ def save_analysis_history(
         return None
 
     try:
-        # Extract key metrics from result
-        nlu_analysis = result_data.get("nlu_analysis", {})
-        dnn_analysis = result_data.get("dnn_analysis", {})
-        
-        is_phishing = False
-        confidence = 0.0
-        risk_level = "LOW"
-        risk_score = 0.0
+        # Use provided values or extract from result data
+        if is_phishing is None or risk_level is None or risk_score is None or confidence is None:
+            # Extract key metrics from result
+            nlu_analysis = result_data.get("nlu_analysis", {})
+            dnn_analysis = result_data.get("dnn_analysis", {})
 
-        # Determine if phishing from NLU or DNN
-        if nlu_analysis and not nlu_analysis.get("error"):
-            is_phishing = nlu_analysis.get("is_phishing", False)
-            confidence = nlu_analysis.get("confidence", 0.0)
-        elif dnn_analysis and not dnn_analysis.get("error"):
-            if isinstance(dnn_analysis, list) and len(dnn_analysis) > 0:
-                dnn = dnn_analysis[0]
-            else:
-                dnn = dnn_analysis
-            is_phishing = dnn.get("is_phishing", False)
-            confidence = dnn.get("confidence", 0.0)
+            # Determine if phishing from NLU or DNN if not provided
+            if is_phishing is None:
+                if nlu_analysis and not nlu_analysis.get("error"):
+                    is_phishing = nlu_analysis.get("is_phishing", False)
+                    if confidence is None:
+                        confidence = nlu_analysis.get("confidence", 0.0)
+                elif dnn_analysis and not dnn_analysis.get("error"):
+                    if isinstance(dnn_analysis, list) and len(dnn_analysis) > 0:
+                        dnn = dnn_analysis[0]
+                    else:
+                        dnn = dnn_analysis
+                    is_phishing = dnn.get("is_phishing", False)
+                    if confidence is None:
+                        confidence = dnn.get("confidence", 0.0)
+                else:
+                    # Default if no analysis data available
+                    is_phishing = False
 
-        # Calculate risk level
-        if is_phishing:
-            if confidence >= 0.8:
-                risk_level = "HIGH"
-                risk_score = confidence
-            elif confidence >= 0.6:
-                risk_level = "MEDIUM"
-                risk_score = confidence
-            else:
-                risk_level = "LOW"
-                risk_score = confidence
-        else:
-            risk_score = 1 - confidence
+            # Set default confidence if still None
+            if confidence is None:
+                confidence = 0.0
+
+            # Calculate risk level if not provided
+            if risk_level is None:
+                if is_phishing:
+                    if confidence >= 0.8:
+                        risk_level = "HIGH"
+                        risk_score = confidence if risk_score is None else risk_score
+                    elif confidence >= 0.6:
+                        risk_level = "MEDIUM"
+                        risk_score = confidence if risk_score is None else risk_score
+                    else:
+                        risk_level = "LOW"
+                        risk_score = confidence if risk_score is None else risk_score
+                else:
+                    risk_level = "LOW"
+                    risk_score = (1 - confidence) if risk_score is None else risk_score
+
+            # Set default risk_score if still None
+            if risk_score is None:
+                risk_score = confidence if is_phishing else (1 - confidence)
 
         # Insert into database
         response = supabase.table("analysis_history").insert({
@@ -120,16 +137,23 @@ def get_analysis_history(
         return []
 
 
-def get_analysis_by_id(analysis_id: str, user_id: str) -> Optional[Dict[str, Any]]:
+def get_analysis_by_id(analysis_id: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """
     Get a specific analysis by ID
+    If user_id is None, returns analysis without user filter (for admin access)
     """
     supabase = get_supabase()
     if not supabase:
         return None
 
     try:
-        response = supabase.table("analysis_history").select("*").eq("id", analysis_id).eq("user_id", user_id).execute()
+        query = supabase.table("analysis_history").select("*").eq("id", analysis_id)
+        
+        # Only filter by user_id if provided (allows admin to access any)
+        if user_id:
+            query = query.eq("user_id", user_id)
+        
+        response = query.execute()
         
         if response.data and len(response.data) > 0:
             return response.data[0]

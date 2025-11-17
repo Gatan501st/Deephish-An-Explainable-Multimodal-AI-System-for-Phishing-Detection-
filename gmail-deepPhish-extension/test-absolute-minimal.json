@@ -1,0 +1,11 @@
+{
+  "manifest_version": 2,
+  "name": "Absolute Minimal Test",
+  "version": "1.0.0",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "minimaltest@test.com"
+    }
+  }
+}
+

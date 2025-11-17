@@ -8,6 +8,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
     <style>
       .about-container {
         max-width: 900px;
@@ -15,32 +16,33 @@
         padding: 40px 20px;
       }
       .about-section {
-        background: white;
-        border: 1px solid #e0e0e0;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         padding: 30px;
         margin-bottom: 30px;
+        box-shadow: 0 2px 8px var(--shadow);
       }
       .about-section h2 {
-        color: #333;
+        color: var(--text-primary);
         font-size: 1.8em;
         margin-bottom: 20px;
-        border-bottom: 2px solid #f0f0f0;
+        border-bottom: 2px solid var(--border-color);
         padding-bottom: 10px;
       }
       .about-section h3 {
-        color: #555;
+        color: var(--text-tertiary);
         font-size: 1.3em;
         margin-top: 25px;
         margin-bottom: 15px;
       }
       .about-section p {
-        color: #666;
+        color: var(--text-secondary);
         line-height: 1.8;
         margin-bottom: 15px;
       }
       .about-section ul {
-        color: #666;
+        color: var(--text-secondary);
         line-height: 1.8;
         margin-left: 25px;
         margin-bottom: 20px;
@@ -110,7 +112,7 @@
     <div class="header">
       <a href="/" style="text-decoration: none; color: inherit">
         <div class="logo-section">
-          <div class="shield-icon">DG</div>
+          <div class="shield-icon">DP</div>
           <div class="logo-text">
             <h1>DeepPhish</h1>
             <p>Advanced Email Security Analysis</p>
@@ -118,6 +120,9 @@
         </div>
       </a>
       <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <span class="theme-toggle-icon" id="themeIcon">Dark</span>
+        </button>
         <a href="/" class="header-btn">Home</a>
         <a href="/education" class="header-btn">Education</a>
         <a

@@ -8,6 +8,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
     <style>
       .education-container {
         max-width: 900px;
@@ -15,85 +16,90 @@
         padding: 40px 20px;
       }
       .education-section {
-        background: white;
-        border: 1px solid #e0e0e0;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         padding: 30px;
         margin-bottom: 30px;
+        box-shadow: 0 2px 8px var(--shadow);
       }
       .education-section h2 {
-        color: #333;
+        color: var(--text-primary);
         font-size: 1.8em;
         margin-bottom: 20px;
-        border-bottom: 2px solid #f0f0f0;
+        border-bottom: 2px solid var(--border-color);
         padding-bottom: 10px;
       }
       .education-section h3 {
-        color: #555;
+        color: var(--text-secondary);
         font-size: 1.3em;
         margin-top: 25px;
         margin-bottom: 15px;
       }
       .education-section p {
-        color: #666;
+        color: var(--text-secondary);
         line-height: 1.8;
         margin-bottom: 15px;
       }
       .education-section ul,
       .education-section ol {
-        color: #666;
+        color: var(--text-secondary);
         line-height: 1.8;
         margin-left: 25px;
         margin-bottom: 20px;
       }
       .education-section li {
         margin-bottom: 10px;
+        color: var(--text-secondary);
       }
       .warning-box {
-        background: #fff5f5;
-        border-left: 4px solid #c53030;
+        background: rgba(245, 101, 101, 0.15);
+        border-left: 4px solid var(--error-color);
         padding: 15px 20px;
         margin: 20px 0;
         border-radius: 4px;
+        color: var(--text-secondary);
       }
       .warning-box strong {
-        color: #c53030;
+        color: var(--error-color);
         display: block;
         margin-bottom: 8px;
       }
       .tip-box {
-        background: #f0f9ff;
-        border-left: 4px solid #3182ce;
+        background: rgba(96, 165, 250, 0.15);
+        border-left: 4px solid var(--accent-color);
         padding: 15px 20px;
         margin: 20px 0;
         border-radius: 4px;
+        color: var(--text-secondary);
       }
       .tip-box strong {
-        color: #3182ce;
+        color: var(--accent-color);
         display: block;
         margin-bottom: 8px;
       }
       .example-box {
-        background: #f9f9f9;
-        border: 1px solid #e0e0e0;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
         border-radius: 6px;
         padding: 15px;
         margin: 15px 0;
         font-family: "Courier New", monospace;
         font-size: 0.9em;
+        color: var(--text-secondary);
       }
       .back-link {
         display: inline-block;
         margin-bottom: 20px;
-        color: #666;
+        color: var(--text-secondary);
         text-decoration: none;
         padding: 8px 16px;
-        background: white;
-        border: 1px solid #ddd;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
         border-radius: 4px;
       }
       .back-link:hover {
-        background: #f9f9f9;
+        background: var(--bg-hover);
       }
       .stats-grid {
         display: grid;
@@ -102,8 +108,8 @@
         margin: 30px 0;
       }
       .stat-card {
-        background: #f9f9f9;
-        border: 1px solid #e0e0e0;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
         border-radius: 6px;
         padding: 20px;
         text-align: center;
@@ -111,11 +117,11 @@
       .stat-card .number {
         font-size: 2em;
         font-weight: bold;
-        color: #333;
+        color: var(--text-primary);
         margin-bottom: 5px;
       }
       .stat-card .label {
-        color: #666;
+        color: var(--text-tertiary);
         font-size: 0.9em;
       }
     </style>
@@ -124,7 +130,7 @@
     <div class="header">
       <a href="/" style="text-decoration: none; color: inherit">
         <div class="logo-section">
-          <div class="shield-icon">DG</div>
+          <div class="shield-icon">DP</div>
           <div class="logo-text">
             <h1>DeepPhish</h1>
             <p>Advanced Email Security Analysis</p>
@@ -132,6 +138,9 @@
         </div>
       </a>
       <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <span class="theme-toggle-icon" id="themeIcon">Dark</span>
+        </button>
         <a href="/" class="header-btn">Home</a>
         <a
           href="/education"
@@ -146,27 +155,57 @@
     <div class="education-container">
       <a href="/" class="back-link">← Back to Home</a>
 
-      <div class="education-section">
-        <h2>Understanding Phishing Attacks</h2>
-        <p>
+      <div class="education-section" style="background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%); border: 2px solid var(--accent-color);">
+        <h2 style="color: var(--accent-color);">Understanding Phishing Attacks</h2>
+        <p style="font-size: 1.1em; line-height: 1.9;">
           Phishing is a cybercrime where attackers attempt to deceive
           individuals into revealing sensitive information, such as passwords,
           credit card numbers, or personal data, by impersonating trustworthy
-          entities through electronic communication.
+          entities through electronic communication. These attacks have become increasingly sophisticated, making it crucial to stay informed and vigilant.
         </p>
 
         <div class="stats-grid">
-          <div class="stat-card">
-            <div class="number">91%</div>
+          <div class="stat-card" style="background: var(--bg-primary); border: 2px solid var(--accent-color);">
+            <div class="number" style="color: var(--accent-color);">91%</div>
             <div class="label">of cyber attacks start with phishing</div>
           </div>
-          <div class="stat-card">
-            <div class="number">$4.5B</div>
+          <div class="stat-card" style="background: var(--bg-primary); border: 2px solid var(--accent-color);">
+            <div class="number" style="color: var(--accent-color);">$4.5B</div>
             <div class="label">estimated annual cost globally</div>
           </div>
-          <div class="stat-card">
-            <div class="number">3.4B</div>
+          <div class="stat-card" style="background: var(--bg-primary); border: 2px solid var(--accent-color);">
+            <div class="number" style="color: var(--accent-color);">3.4B</div>
             <div class="label">phishing emails sent daily</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="education-section">
+        <h2>Quick Reference: Red Flags Checklist</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
+          <div style="padding: 15px; background: var(--bg-tertiary); border-left: 4px solid var(--error-color); border-radius: 4px;">
+            <strong style="color: var(--error-color);">Sender Issues</strong>
+            <ul style="margin-top: 8px; margin-left: 20px;">
+              <li>Unknown or suspicious sender</li>
+              <li>Misspelled domain names</li>
+              <li>Generic greetings</li>
+            </ul>
+          </div>
+          <div style="padding: 15px; background: var(--bg-tertiary); border-left: 4px solid var(--error-color); border-radius: 4px;">
+            <strong style="color: var(--error-color);">Content Warnings</strong>
+            <ul style="margin-top: 8px; margin-left: 20px;">
+              <li>Urgent action required</li>
+              <li>Poor grammar/spelling</li>
+              <li>Requests for credentials</li>
+            </ul>
+          </div>
+          <div style="padding: 15px; background: var(--bg-tertiary); border-left: 4px solid var(--error-color); border-radius: 4px;">
+            <strong style="color: var(--error-color);">Link & Attachment</strong>
+            <ul style="margin-top: 8px; margin-left: 20px;">
+              <li>Suspicious URLs</li>
+              <li>Unexpected attachments</li>
+              <li>Mismatched link text</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -265,54 +304,85 @@
       </div>
 
       <div class="education-section">
-        <h2>How to Protect Yourself</h2>
+        <h2>How to Protect Yourself: Action Steps</h2>
 
-        <h3>1. Verify the Source</h3>
-        <p>
-          Before clicking any links or providing information, verify the sender
-          through a separate communication channel. Contact the organization
-          directly using their official website or phone number (not from the
-          email).
-        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+          <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">1. Verify the Source</h3>
+            <p>
+              Before clicking any links or providing information, verify the sender
+              through a separate communication channel. Contact the organization
+              directly using their official website or phone number (not from the
+              email).
+            </p>
+            <div class="tip-box" style="margin-top: 15px; margin-bottom: 0;">
+              <strong>Remember:</strong> Legitimate organizations will never ask you to verify sensitive information via email links.
+            </div>
+          </div>
 
-        <h3>2. Examine URLs Carefully</h3>
-        <p>Hover over links to see the actual URL before clicking. Look for:</p>
-        <ul>
-          <li>HTTPS (secure connection) - but this alone isn't enough</li>
-          <li>Correct domain spelling (no typos)</li>
-          <li>Legitimate subdomains and paths</li>
-        </ul>
+          <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">2. Examine URLs Carefully</h3>
+            <p>Hover over links to see the actual URL before clicking. Look for:</p>
+            <ul>
+              <li>HTTPS (secure connection) - but this alone isn't enough</li>
+              <li>Correct domain spelling (no typos)</li>
+              <li>Legitimate subdomains and paths</li>
+            </ul>
+            <div class="example-box" style="margin-top: 15px; margin-bottom: 0;">
+              Good: https://www.yourbank.com/login<br>
+              Bad: https://your-bank.com.fake-site.net/login
+            </div>
+          </div>
 
-        <h3>3. Be Skeptical of Attachments</h3>
-        <p>
-          Never open attachments from unknown senders or unexpected emails, even
-          from known contacts. When in doubt, verify with the sender through a
-          separate channel.
-        </p>
+          <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">3. Be Skeptical of Attachments</h3>
+            <p>
+              Never open attachments from unknown senders or unexpected emails, even
+              from known contacts. When in doubt, verify with the sender through a
+              separate channel.
+            </p>
+            <div class="warning-box" style="margin-top: 15px; margin-bottom: 0;">
+              <strong>Dangerous file types:</strong> .exe, .scr, .bat, .zip, .docm, .xlsm
+            </div>
+          </div>
 
-        <h3>4. Use Multi-Factor Authentication (MFA)</h3>
-        <p>
-          Enable MFA on all important accounts. Even if attackers obtain your
-          password, they'll need your second authentication method to access
-          your account.
-        </p>
+          <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">4. Use Multi-Factor Authentication</h3>
+            <p>
+              Enable MFA on all important accounts. Even if attackers obtain your
+              password, they'll need your second authentication method to access
+              your account.
+            </p>
+            <div class="tip-box" style="margin-top: 15px; margin-bottom: 0;">
+              <strong>Best Practice:</strong> Use authenticator apps instead of SMS when possible.
+            </div>
+          </div>
 
-        <h3>5. Keep Software Updated</h3>
-        <p>
-          Regularly update your operating system, browsers, and security
-          software to protect against known vulnerabilities.
-        </p>
+          <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">5. Keep Software Updated</h3>
+            <p>
+              Regularly update your operating system, browsers, and security
+              software to protect against known vulnerabilities.
+            </p>
+            <ul style="margin-top: 10px;">
+              <li>Enable automatic updates</li>
+              <li>Update browser extensions</li>
+              <li>Keep antivirus current</li>
+            </ul>
+          </div>
 
-        <h3>6. Educate Yourself and Others</h3>
-        <p>
-          Stay informed about current phishing trends and techniques. Share
-          knowledge with family, friends, and colleagues.
-        </p>
-
-        <div class="tip-box">
-          <strong>Pro Tip:</strong>
-          When in doubt, don't click. If an email seems suspicious, delete it.
-          If it's legitimate, the sender will find another way to reach you.
+          <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">6. Educate Yourself and Others</h3>
+            <p>
+              Stay informed about current phishing trends and techniques. Share
+              knowledge with family, friends, and colleagues.
+            </p>
+            <div class="tip-box" style="margin-top: 15px; margin-bottom: 0;">
+              <strong>Pro Tip:</strong>
+              When in doubt, don't click. If an email seems suspicious, delete it.
+              If it's legitimate, the sender will find another way to reach you.
+            </div>
+          </div>
         </div>
       </div>
 
@@ -429,30 +499,82 @@
         </p>
       </div>
 
+      <div class="education-section" style="background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%); border: 2px solid var(--success-color);">
+        <h2 style="color: var(--success-color);">Key Takeaways</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
+          <div style="padding: 20px; background: var(--bg-primary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">Before You Click</h3>
+            <ul>
+              <li>Verify the sender through official channels</li>
+              <li>Hover over links to check URLs</li>
+              <li>Look for red flags in content</li>
+              <li>When in doubt, don't click</li>
+            </ul>
+          </div>
+          <div style="padding: 20px; background: var(--bg-primary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">Protection Strategies</h3>
+            <ul>
+              <li>Enable multi-factor authentication</li>
+              <li>Keep software updated</li>
+              <li>Use strong, unique passwords</li>
+              <li>Report suspicious emails</li>
+            </ul>
+          </div>
+          <div style="padding: 20px; background: var(--bg-primary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">If You're Targeted</h3>
+            <ul>
+              <li>Change passwords immediately</li>
+              <li>Monitor accounts for activity</li>
+              <li>Contact financial institutions</li>
+              <li>Report to authorities</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tip-box" style="margin-top: 25px; text-align: center;">
+          <strong style="font-size: 1.1em;">Remember:</strong> The best defense against phishing is awareness and skepticism. Trust your instincts - if something feels wrong, it probably is.
+        </div>
+      </div>
+
       <div class="education-section">
         <h2>Additional Resources</h2>
-        <ul>
-          <li>
-            <strong>Federal Trade Commission:</strong>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+          <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">Federal Trade Commission</h3>
+            <p style="margin-bottom: 10px;">Official guidance on recognizing and avoiding phishing scams.</p>
             <a
               href="https://www.consumer.ftc.gov/articles/how-recognize-and-avoid-phishing-scams"
               target="_blank"
-              >Phishing Scams Guide</a
+              style="display: inline-block; padding: 8px 16px; background: var(--accent-color); color: white; text-decoration: none; border-radius: 4px; font-weight: 500;"
+              onmouseover="this.style.background='var(--accent-hover)'"
+              onmouseout="this.style.background='var(--accent-color)'"
+              >Visit FTC Guide →</a
             >
-          </li>
-          <li>
-            <strong>Cybersecurity & Infrastructure Security Agency:</strong>
+          </div>
+          <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">CISA Resources</h3>
+            <p style="margin-bottom: 10px;">Cybersecurity awareness resources from the Cybersecurity & Infrastructure Security Agency.</p>
             <a
               href="https://www.cisa.gov/news-events/cybersecurity-awareness-month"
               target="_blank"
-              >Cybersecurity Awareness Resources</a
+              style="display: inline-block; padding: 8px 16px; background: var(--accent-color); color: white; text-decoration: none; border-radius: 4px; font-weight: 500;"
+              onmouseover="this.style.background='var(--accent-hover)'"
+              onmouseout="this.style.background='var(--accent-color)'"
+              >Visit CISA →</a
             >
-          </li>
-          <li>
-            <strong>Anti-Phishing Working Group:</strong>
-            <a href="https://apwg.org/" target="_blank">APWG Resources</a>
-          </li>
-        </ul>
+          </div>
+          <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--accent-color); margin-top: 0;">Anti-Phishing Working Group</h3>
+            <p style="margin-bottom: 10px;">Global coalition working to eliminate phishing and email fraud.</p>
+            <a
+              href="https://apwg.org/"
+              target="_blank"
+              style="display: inline-block; padding: 8px 16px; background: var(--accent-color); color: white; text-decoration: none; border-radius: 4px; font-weight: 500;"
+              onmouseover="this.style.background='var(--accent-hover)'"
+              onmouseout="this.style.background='var(--accent-color)'"
+              >Visit APWG →</a
+            >
+          </div>
+        </div>
       </div>
     </div>
   </body>
