@@ -31,3 +31,5 @@ SETUP_SUPABASE.md
 dnn.ipynb
 phishing_csv_analysis.ipynb
 requirements.txt
+*.md
+*.sql

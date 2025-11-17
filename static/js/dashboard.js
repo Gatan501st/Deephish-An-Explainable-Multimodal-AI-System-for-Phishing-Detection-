@@ -13,10 +13,59 @@ function initializeDashboard() {
   initializeThreatChart();
 }
 
+// Global chart instances
+let detectionChart = null;
+let threatChart = null;
+
 // Load dashboard data from API
 async function loadDashboardData() {
   try {
-    // Load last result for stats
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      // Not logged in, show public dashboard
+      loadPublicDashboard();
+      return;
+    }
+
+    // Load statistics from API
+    const statsResponse = await fetch('/api/statistics?days=30', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (statsResponse.ok) {
+      const stats = await statsResponse.json();
+      updateStatsFromAPI(stats);
+      updateChartsFromAPI(stats);
+    }
+
+    // Load recent history for activity
+    const historyResponse = await fetch('/api/history?limit=10', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (historyResponse.ok) {
+      const historyData = await historyResponse.json();
+      updateActivityFromHistory(historyData.history || []);
+    }
+    
+    // Load model performance (if available)
+    loadModelPerformance();
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    // Fallback to public dashboard
+    loadPublicDashboard();
+  }
+}
+
+// Load public dashboard (no auth required)
+async function loadPublicDashboard() {
+  try {
     const response = await fetch('/api/last_result');
     const data = await response.json();
     
@@ -24,12 +73,78 @@ async function loadDashboardData() {
       updateStats(data);
       updateActivity(data);
     }
-    
-    // Load model performance (if available)
-    loadModelPerformance();
   } catch (error) {
-    console.error('Error loading dashboard data:', error);
+    console.error('Error loading public dashboard:', error);
   }
+}
+
+// Update stats from API statistics
+function updateStatsFromAPI(stats) {
+  document.getElementById('totalEmails').textContent = stats.total_analyses || 0;
+  document.getElementById('phishingDetected').textContent = stats.phishing_detected || 0;
+  
+  // Calculate URLs and attachments from analysis types
+  const urlCount = stats.by_type?.url || 0;
+  const attachmentCount = stats.by_type?.attachment || 0;
+  document.getElementById('urlsScanned').textContent = urlCount;
+  document.getElementById('attachmentsScanned').textContent = attachmentCount;
+}
+
+// Update charts from API statistics
+function updateChartsFromAPI(stats) {
+  // Update detection chart with daily counts
+  if (stats.daily_counts && detectionChart) {
+    const dates = Object.keys(stats.daily_counts).sort();
+    const counts = dates.map(date => stats.daily_counts[date]);
+    
+    detectionChart.data.labels = dates.map(date => new Date(date).toLocaleDateString());
+    detectionChart.data.datasets[0].data = counts;
+    detectionChart.update();
+  }
+
+  // Update threat distribution chart
+  if (threatChart) {
+    const phishing = stats.phishing_detected || 0;
+    const safe = stats.safe_detected || 0;
+    const total = stats.total_analyses || 1;
+    const suspicious = total - phishing - safe;
+
+    threatChart.data.datasets[0].data = [phishing, safe, suspicious];
+    threatChart.update();
+  }
+}
+
+// Update activity from history
+function updateActivityFromHistory(history) {
+  const activityList = document.getElementById('activityList');
+  activityList.innerHTML = '';
+
+  if (history.length === 0) {
+    activityList.innerHTML = '<div class="activity-item"><div class="activity-content"><p>No recent activity</p></div></div>';
+    return;
+  }
+
+  history.forEach(item => {
+    const activityItem = document.createElement('div');
+    activityItem.className = 'activity-item';
+    
+    const isPhishing = item.is_phishing;
+    const status = isPhishing ? 'Phishing Detected' : 'Safe Email';
+    const statusClass = isPhishing ? 'phishing' : 'safe';
+    const timestamp = new Date(item.created_at).toLocaleString();
+    const type = item.analysis_type.toUpperCase();
+    
+    activityItem.innerHTML = `
+      <div class="activity-icon ${statusClass}" data-status="${isPhishing ? 'PH' : 'OK'}"></div>
+      <div class="activity-content">
+        <p><strong>${status}</strong> - ${type}</p>
+        <small>${timestamp}</small>
+        ${item.risk_level ? `<span class="risk-badge risk-${item.risk_level.toLowerCase()}">${item.risk_level}</span>` : ''}
+      </div>
+    `;
+    
+    activityList.appendChild(activityItem);
+  });
 }
 
 // Update statistics cards
@@ -109,23 +224,17 @@ function initializeDetectionChart() {
   const ctx = document.getElementById('detectionChart');
   if (!ctx) return;
   
-  // Sample data - replace with real data from API
-  const chart = new Chart(ctx, {
+  detectionChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      labels: [],
       datasets: [{
-        label: 'Phishing Detected',
-        data: [12, 19, 15, 25, 22, 18, 24],
-        borderColor: '#e74c3c',
-        backgroundColor: 'rgba(231, 76, 60, 0.1)',
-        tension: 0.4
-      }, {
-        label: 'Safe Emails',
-        data: [88, 81, 85, 75, 78, 82, 76],
-        borderColor: '#2ecc71',
-        backgroundColor: 'rgba(46, 204, 113, 0.1)',
-        tension: 0.4
+        label: 'Analyses per Day',
+        data: [],
+        borderColor: '#667eea',
+        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+        tension: 0.4,
+        fill: true
       }]
     },
     options: {
@@ -137,12 +246,30 @@ function initializeDetectionChart() {
         },
         title: {
           display: false
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false
         }
       },
       scales: {
         y: {
-          beginAtZero: true
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        },
+        x: {
+          ticks: {
+            maxRotation: 45,
+            minRotation: 45
+          }
         }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
       }
     }
   });
@@ -153,19 +280,20 @@ function initializeThreatChart() {
   const ctx = document.getElementById('threatChart');
   if (!ctx) return;
   
-  const chart = new Chart(ctx, {
+  threatChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Phishing', 'Safe', 'Suspicious'],
       datasets: [{
-        data: [25, 60, 15],
+        data: [0, 0, 0],
         backgroundColor: [
           '#e74c3c',
           '#2ecc71',
           '#f39c12'
         ],
         borderWidth: 2,
-        borderColor: '#fff'
+        borderColor: '#fff',
+        hoverOffset: 4
       }]
     },
     options: {
@@ -174,6 +302,17 @@ function initializeThreatChart() {
       plugins: {
         legend: {
           position: 'bottom',
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
         }
       }
     }

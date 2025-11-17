@@ -8,12 +8,13 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
   </head>
   <body>
     <div class="header">
       <a href="/" style="text-decoration: none; color: inherit">
         <div class="logo-section">
-          <div class="shield-icon">DG</div>
+          <div class="shield-icon">DP</div>
           <div class="logo-text">
             <h1>DeepPhish</h1>
             <p>Advanced Email Security Analysis</p>
@@ -21,6 +22,9 @@
         </div>
       </a>
       <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <span class="theme-toggle-icon" id="themeIcon">Dark</span>
+        </button>
         <a href="/" class="header-btn">Home</a>
         <a href="/education" class="header-btn">Education</a>
         <a href="/about" class="header-btn">About</a>
@@ -40,6 +44,15 @@
             >Sign Up</a
           >
           <span id="userInfo" style="display: none">
+            <a href="/profile" class="header-btn" style="margin-right: 10px"
+              >Profile</a
+            >
+            <a href="/history" class="header-btn" style="margin-right: 10px"
+              >History</a
+            >
+            <a href="/settings" class="header-btn" style="margin-right: 10px"
+              >Settings</a
+            >
             <span
               id="userEmailDisplay"
               style="margin-right: 10px; color: #666"
@@ -75,7 +88,6 @@
         <!-- Email File Section -->
         <div class="upload-section">
           <div class="section-header">
-            <span></span>
             <h3>Upload Email File</h3>
           </div>
           <p class="section-description">
@@ -91,22 +103,13 @@
           <button
             type="button"
             id="clearFileBtn"
-            style="
-              display: none;
-              margin-top: 10px;
-              padding: 8px 16px;
-              background: #f5f5f5;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              cursor: pointer;
-              font-size: 0.9em;
-            "
+            style="display: none"
             onclick="resetFileInput()"
           >
             Clear File
           </button>
 
-          <div style="margin-top: 18px">
+          <div style="margin-top: auto; padding-top: 20px">
             <button class="analyze-btn" id="fullAnalysisBtn" disabled>
               Full Analysis
             </button>
@@ -116,7 +119,6 @@
         <!-- Paste Email Content Section -->
         <div class="paste-section">
           <div class="section-header">
-            <span></span>
             <h3>Paste Email / SMS Content</h3>
           </div>
           <p class="section-description">
@@ -131,7 +133,14 @@
             placeholder="Paste email or SMS content here including headers..."
           ></textarea>
 
-          <div style="margin-top: 12px; display: flex; gap: 10px">
+          <div
+            style="
+              margin-top: auto;
+              padding-top: 20px;
+              display: flex;
+              gap: 12px;
+            "
+          >
             <button class="analyze-btn" id="storeJsonBtn" disabled>
               Store JSON
             </button>
@@ -142,7 +151,6 @@
         <!-- URLs and IPs Section -->
         <div class="paste-section">
           <div class="section-header">
-            <span></span>
             <h3>Suspicious URLs & IPs</h3>
           </div>
           <p class="section-description">
@@ -155,31 +163,24 @@
             placeholder="Enter one URL or IP per line..."
           ></textarea>
 
-          <div style="margin-top: 12px">
+          <div style="margin-top: auto; padding-top: 20px">
             <button class="analyze-btn" id="analyzeUrlBtn" disabled>
               Check URLs / IPs
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Attachment scanner (independent) -->
-      <div class="upload-container" style="grid-template-columns: 1fr">
+        <!-- Attachment scanner -->
         <div class="upload-section">
           <div class="section-header">
-            <span></span>
             <h3>Attachment Scanner</h3>
           </div>
           <p class="section-description">
-            Upload a single attachment file to hash and scan.
+            Upload a single attachment file to hash and scan
           </p>
 
-          <input
-            type="file"
-            id="attachFile"
-            style="display: block; margin-bottom: 12px"
-          />
-          <div>
+          <input type="file" id="attachFile" />
+          <div style="margin-top: auto; padding-top: 20px">
             <button class="analyze-btn" id="scanAttachmentBtn" disabled>
               Scan Attachment
             </button>
@@ -213,7 +214,7 @@
 
     <script>
       // Check authentication status
-      function checkAuthStatus() {
+      async function checkAuthStatus() {
         const token = localStorage.getItem("access_token");
         const loginLink = document.getElementById("loginLink");
         const signupLink = document.getElementById("signupLink");
@@ -221,13 +222,47 @@
         const userEmailDisplay = document.getElementById("userEmailDisplay");
 
         if (token) {
-          // User is logged in
-          loginLink.style.display = "none";
-          signupLink.style.display = "none";
-          userInfo.style.display = "inline-block";
-          const email = localStorage.getItem("user_email");
-          if (email) {
-            userEmailDisplay.textContent = email;
+          // Verify token is still valid
+          try {
+            const response = await fetch("/api/profile", {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (response.ok) {
+              const profile = await response.json();
+              // User is logged in and token is valid
+              loginLink.style.display = "none";
+              signupLink.style.display = "none";
+              userInfo.style.display = "inline-block";
+              userEmailDisplay.textContent =
+                profile.email || localStorage.getItem("user_email") || "User";
+              // Store role for admin checks
+              if (profile.role) {
+                localStorage.setItem("user_role", profile.role);
+              }
+            } else {
+              // Token invalid, clear it
+              localStorage.removeItem("access_token");
+              localStorage.removeItem("refresh_token");
+              localStorage.removeItem("user_email");
+              localStorage.removeItem("user_id");
+              localStorage.removeItem("user_role");
+              checkAuthStatus();
+            }
+          } catch (error) {
+            console.error("Auth check failed:", error);
+            // On error, assume logged in if token exists
+            loginLink.style.display = "none";
+            signupLink.style.display = "none";
+            userInfo.style.display = "inline-block";
+            const email = localStorage.getItem("user_email");
+            if (email) {
+              userEmailDisplay.textContent = email;
+            }
           }
         } else {
           // User is not logged in

@@ -8,19 +8,21 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
     <style>
       .auth-container {
         max-width: 450px;
         margin: 80px auto;
         padding: 40px;
-        background: white;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 20px var(--shadow);
       }
 
       .auth-container h1 {
         text-align: center;
-        color: #333;
+        color: var(--text-primary);
         margin-bottom: 30px;
       }
 
@@ -37,39 +39,42 @@
       }
 
       .form-group label {
-        color: #666;
+        color: var(--text-tertiary);
         font-weight: 500;
         font-size: 0.9em;
       }
 
       .form-group input {
         padding: 12px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--border-color);
         border-radius: 6px;
         font-size: 1em;
+        background: var(--bg-primary);
+        color: var(--text-secondary);
         transition: border-color 0.3s;
       }
 
       .form-group input:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: var(--accent-color);
       }
 
       .auth-btn {
         padding: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--accent-color);
         color: white;
         border: none;
         border-radius: 6px;
         font-size: 1em;
         font-weight: 600;
         cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
       }
 
       .auth-btn:hover {
+        background: var(--accent-hover);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 4px 12px var(--shadow-hover);
       }
 
       .auth-btn:disabled {
@@ -80,10 +85,10 @@
 
       .auth-error {
         padding: 12px;
-        background: #fee;
-        border: 1px solid #c53030;
+        background: rgba(245, 101, 101, 0.15);
+        border: 1px solid var(--error-color);
         border-radius: 6px;
-        color: #c53030;
+        color: var(--error-color);
         font-size: 0.9em;
         display: none;
       }
@@ -94,10 +99,10 @@
 
       .auth-success {
         padding: 12px;
-        background: #e8f5e9;
-        border: 1px solid #2e7d32;
+        background: rgba(72, 187, 120, 0.15);
+        border: 1px solid var(--success-color);
         border-radius: 6px;
-        color: #2e7d32;
+        color: var(--success-color);
         font-size: 0.9em;
         display: none;
       }
@@ -109,11 +114,11 @@
       .auth-links {
         text-align: center;
         margin-top: 20px;
-        color: #666;
+        color: var(--text-tertiary);
       }
 
       .auth-links a {
-        color: #667eea;
+        color: var(--accent-color);
         text-decoration: none;
         font-weight: 500;
       }
@@ -127,7 +132,7 @@
     <div class="header">
       <a href="/" style="text-decoration: none; color: inherit">
         <div class="logo-section">
-          <div class="shield-icon">DG</div>
+          <div class="shield-icon">DP</div>
           <div class="logo-text">
             <h1>DeepPhish</h1>
             <p>Advanced Email Security Analysis</p>
@@ -135,6 +140,9 @@
         </div>
       </a>
       <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <span class="theme-toggle-icon" id="themeIcon">Dark</span>
+        </button>
         <a href="/" class="header-btn">Home</a>
         <a href="/education" class="header-btn">Education</a>
         <a href="/about" class="header-btn">About</a>

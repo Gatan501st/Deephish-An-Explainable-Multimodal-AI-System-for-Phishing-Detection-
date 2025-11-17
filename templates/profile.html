@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Profile — DeepPhish</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <style>
+      .profile-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 20px 80px;
+      }
+
+      .page-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-end;
+        margin-bottom: 30px;
+      }
+
+      .page-title h2 {
+        color: var(--text-primary);
+        font-size: 2em;
+        margin-bottom: 6px;
+      }
+
+      .page-title p {
+        color: var(--text-secondary);
+        margin: 0;
+      }
+
+      .back-link {
+        text-decoration: none;
+        font-size: 0.9em;
+        border: 1px solid var(--border-color);
+        padding: 8px 18px;
+        border-radius: 999px;
+        color: var(--text-secondary);
+      }
+
+      .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 25px;
+      }
+
+      .profile-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 20px 50px var(--shadow);
+      }
+
+      .profile-section h3 {
+        color: var(--text-primary);
+        font-size: 1.3em;
+        margin-bottom: 10px;
+      }
+
+      .section-subtitle {
+        color: var(--text-tertiary);
+        font-size: 0.9em;
+        margin-bottom: 20px;
+      }
+
+      .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+      }
+
+      .role-chip {
+        display: inline-flex;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 0.8em;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        background: rgba(79, 209, 197, 0.18);
+        color: #4fd1c5;
+      }
+
+      .snapshot-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+      }
+
+      .snapshot-card {
+        padding: 18px;
+        border-radius: 14px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .snapshot-card span {
+        font-size: 0.85em;
+        color: var(--text-tertiary);
+      }
+
+      .snapshot-card strong {
+        font-size: 1.7em;
+        color: var(--text-primary);
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--text-tertiary);
+        font-weight: 500;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        font-size: 1em;
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+        transition: border 0.2s, box-shadow 0.2s;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.25);
+      }
+
+      .form-group input:disabled {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-tertiary);
+        cursor: not-allowed;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.95em;
+        font-weight: 600;
+        margin-right: 12px;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .btn:focus-visible {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 2px;
+      }
+
+      .btn-primary {
+        background: var(--accent-color);
+        color: white;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.35);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 35px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+      }
+
+      .btn-secondary:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+      }
+
+      .alert {
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .alert-success {
+        background: rgba(72, 187, 120, 0.12);
+        color: var(--success-color);
+        border: 1px solid rgba(72, 187, 120, 0.4);
+      }
+
+      .alert-error {
+        background: rgba(245, 101, 101, 0.12);
+        color: var(--error-color);
+        border: 1px solid rgba(245, 101, 101, 0.35);
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .stat-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 0.8em;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .stat-admin {
+        background: rgba(245, 101, 101, 0.18);
+        color: var(--error-color);
+      }
+
+      .stat-user {
+        background: rgba(79, 209, 197, 0.18);
+        color: #4fd1c5;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .stat-card {
+        padding: 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .stat-card span {
+        color: var(--text-tertiary);
+        font-size: 0.85em;
+      }
+
+      .stat-card strong {
+        font-size: 1.8em;
+        color: var(--text-primary);
+      }
+
+      .stat-card.highlight strong {
+        color: var(--accent-color);
+      }
+
+      .stat-empty {
+        padding: 30px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px dashed var(--border-color);
+        text-align: center;
+        color: var(--text-tertiary);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="/" style="text-decoration: none; color: inherit">
+        <div class="logo-section">
+          <div class="shield-icon">DP</div>
+          <div class="logo-text">
+            <h1>DeepPhish</h1>
+            <p>Advanced Email Security Analysis</p>
+          </div>
+        </div>
+      </a>
+      <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <span class="theme-toggle-icon" id="themeIcon">Dark</span>
+        </button>
+        <a href="/" class="header-btn">Home</a>
+        <a href="/history" class="header-btn">History</a>
+        <a href="/settings" class="header-btn">Settings</a>
+        <a href="/dashboard" class="header-btn">Dashboard</a>
+        <a href="/about" class="header-btn">About</a>
+      </div>
+    </div>
+
+    <div class="profile-container">
+      <div class="page-title">
+        <div>
+          <h2>Account Profile</h2>
+          <p>Update your details and review recent security activity</p>
+        </div>
+        <a href="/" class="back-link">← Back to Home</a>
+      </div>
+
+      <div id="loadingSection" class="loading">
+        <div class="spinner"></div>
+        <div>Loading profile...</div>
+      </div>
+
+      <div id="errorSection" style="display: none"></div>
+
+      <div id="profileContent" style="display: none">
+        <div class="profile-section">
+          <div class="profile-header">
+            <div>
+              <h3>Account Snapshot</h3>
+              <p class="section-subtitle">Last 30 days across web + extension</p>
+            </div>
+            <span id="roleBadge" class="role-chip">USER</span>
+          </div>
+          <div id="snapshotGrid" class="snapshot-grid">
+            <div class="snapshot-card">
+              <span>Total Analyses</span>
+              <strong>--</strong>
+            </div>
+            <div class="snapshot-card">
+              <span>Phishing Detected</span>
+              <strong>--</strong>
+            </div>
+            <div class="snapshot-card">
+              <span>Safe Detected</span>
+              <strong>--</strong>
+            </div>
+            <div class="snapshot-card">
+              <span>Phishing Rate</span>
+              <strong>--%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-grid">
+          <div class="profile-section">
+            <h3>Profile Information</h3>
+            <p class="section-subtitle">Use the same details across the dashboard and extension</p>
+            <div id="profileForm">
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" disabled />
+              </div>
+              <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  placeholder="Add your preferred display name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="role">Role</label>
+                <input type="text" id="role" disabled />
+              </div>
+              <div class="form-group">
+                <button class="btn btn-primary" id="saveProfileBtn">
+                  Save Changes
+                </button>
+                <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <h3>Detailed Statistics</h3>
+            <p class="section-subtitle">Expanded breakdown of your latest analyses</p>
+            <div id="statisticsContent">
+              <p>Loading statistics...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Get auth token
+      function getAuthToken() {
+        return localStorage.getItem("access_token");
+      }
+
+      // Get auth headers
+      function getAuthHeaders() {
+        const headers = {
+          "Content-Type": "application/json",
+        };
+        const token = getAuthToken();
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        return headers;
+      }
+
+      // Load profile
+      async function loadProfile() {
+        try {
+          const response = await fetch("/api/profile", {
+            method: "GET",
+            headers: getAuthHeaders(),
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              window.location.href = "/login";
+              return;
+            }
+            throw new Error("Failed to load profile");
+          }
+
+          const profile = await response.json();
+          displayProfile(profile);
+          loadStatistics();
+        } catch (error) {
+          document.getElementById("loadingSection").style.display = "none";
+          showError("Failed to load profile: " + error.message);
+        }
+      }
+
+      // Display profile
+      function displayProfile(profile) {
+        document.getElementById("loadingSection").style.display = "none";
+        document.getElementById("profileContent").style.display = "block";
+
+        const emailValue = profile.email || "";
+        const fullNameValue = profile.full_name || "";
+        const roleValue = profile.role || "user";
+
+        document.getElementById("email").value = emailValue;
+        document.getElementById("fullName").value = fullNameValue;
+        document.getElementById("role").value = roleValue;
+
+        const roleBadge = document.getElementById("roleBadge");
+        roleBadge.textContent = roleValue.toUpperCase();
+        roleBadge.className = `role-chip ${roleValue === "admin" ? "stat-admin" : "stat-user"}`;
+      }
+
+      // Load statistics
+      async function loadStatistics() {
+        try {
+          const response = await fetch("/api/statistics?days=30", {
+            method: "GET",
+            headers: getAuthHeaders(),
+          });
+
+          if (response.ok) {
+            const stats = await response.json();
+            displayStatistics(stats);
+          }
+        } catch (error) {
+          console.error("Failed to load statistics:", error);
+        }
+      }
+
+      // Display statistics
+      function displayStatistics(stats) {
+        const statsContent = document.getElementById("statisticsContent");
+        const snapshotGrid = document.getElementById("snapshotGrid");
+
+        if (!stats.total_analyses) {
+          snapshotGrid.innerHTML = `
+            <div class="snapshot-card" style="grid-column: span 4;">
+              <span>No activity yet</span>
+              <strong style="font-size:1em;">Start scanning to populate your dashboard.</strong>
+            </div>
+          `;
+          statsContent.innerHTML = `
+            <div class="stat-empty">
+              No analyses yet. Start scanning emails to see your personal metrics.
+            </div>
+          `;
+          return;
+        }
+
+        snapshotGrid.innerHTML = `
+          <div class="snapshot-card">
+            <span>Total Analyses</span>
+            <strong>${stats.total_analyses}</strong>
+          </div>
+          <div class="snapshot-card">
+            <span>Phishing Detected</span>
+            <strong>${stats.phishing_detected}</strong>
+          </div>
+          <div class="snapshot-card">
+            <span>Safe Detected</span>
+            <strong>${stats.safe_detected}</strong>
+          </div>
+          <div class="snapshot-card">
+            <span>Phishing Rate</span>
+            <strong>${stats.phishing_rate.toFixed(1)}%</strong>
+          </div>
+        `;
+
+        statsContent.innerHTML = `
+          <div class="stat-grid">
+            <div class="stat-card highlight">
+              <span>Total Analyses</span>
+              <strong>${stats.total_analyses}</strong>
+            </div>
+            <div class="stat-card">
+              <span>Phishing Detected</span>
+              <strong>${stats.phishing_detected}</strong>
+            </div>
+            <div class="stat-card">
+              <span>Safe Detected</span>
+              <strong>${stats.safe_detected}</strong>
+            </div>
+            <div class="stat-card">
+              <span>Phishing Rate</span>
+              <strong>${stats.phishing_rate.toFixed(1)}%</strong>
+            </div>
+          </div>
+        `;
+      }
+
+      // Save profile
+      async function saveProfile() {
+        const fullName = document.getElementById("fullName").value;
+        const saveBtn = document.getElementById("saveProfileBtn");
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Saving...";
+
+        try {
+          const response = await fetch("/api/profile", {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+              preferences: {
+                full_name: fullName,
+              },
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to save profile");
+          }
+
+          showSuccess("Profile updated successfully!");
+          loadProfile();
+        } catch (error) {
+          showError("Failed to save profile: " + error.message);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Save Changes";
+        }
+      }
+
+      // Show error
+      function showError(message) {
+        const errorSection = document.getElementById("errorSection");
+        errorSection.style.display = "block";
+        errorSection.innerHTML = `<div class="alert alert-error">${message}</div>`;
+        setTimeout(() => {
+          errorSection.style.display = "none";
+        }, 5000);
+      }
+
+      // Show success
+      function showSuccess(message) {
+        const errorSection = document.getElementById("errorSection");
+        errorSection.style.display = "block";
+        errorSection.innerHTML = `<div class="alert alert-success">${message}</div>`;
+        setTimeout(() => {
+          errorSection.style.display = "none";
+        }, 3000);
+      }
+
+      // Event listeners
+      document
+        .getElementById("saveProfileBtn")
+        .addEventListener("click", saveProfile);
+      document.getElementById("cancelBtn").addEventListener("click", () => {
+        loadProfile();
+      });
+
+      // Check auth on page load
+      async function checkAuth() {
+        const token = getAuthToken();
+        if (!token) {
+          window.location.href = "/login";
+          return;
+        }
+
+        // Verify token by trying to load profile
+        try {
+          await loadProfile();
+        } catch (error) {
+          console.error("Auth check failed:", error);
+          window.location.href = "/login";
+        }
+      }
+
+      // Load profile on page load
+      checkAuth();
+    </script>
+  </body>
+</html>

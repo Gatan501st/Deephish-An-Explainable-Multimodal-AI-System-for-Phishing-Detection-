@@ -1,0 +1,40 @@
+{
+  "manifest_version": 2,
+  "name": "DeepPhish Email Security Scanner",
+  "version": "1.0.0",
+  "description": "AI-powered phishing detection for Gmail using DeepPhish",
+  
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "https://mail.google.com/*",
+    "http://localhost:5000/*"
+  ],
+  
+  "background": {
+    "scripts": ["browser-polyfill.js", "background.js"],
+    "persistent": false
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["browser-polyfill.js", "content.js"],
+      "css": ["styles/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "deepphish@example.com",
+      "strict_min_version": "109.0"
+    }
+  }
+}
+
