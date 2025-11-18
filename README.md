@@ -1,154 +1,95 @@
 # DeepPhish
 
-> An Explainable Multimodal AI System for Phishing Detection
+An explainable multimodal AI system for detecting phishing emails using deep learning. The project implements two models (NLU for email content and DNN for URL analysis) trained on phishing datasets to classify content and provide detailed risk assessments.
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+## Project Overview
 
-DeepPhish is a comprehensive, explainable multimodal AI system for detecting phishing emails. It combines Natural Language Understanding (NLU), Deep Neural Networks (DNN), and external threat intelligence to provide accurate, explainable phishing detection.
+This system analyzes emails and URLs to detect phishing attempts through multiple detection methods:
 
-## ✨ Features
+**Analysis Types:**
 
-### Core Analysis
+- Email content analysis (NLU-based text classification)
+- URL/IP analysis (DNN-based feature extraction)
+- Threat intelligence integration (VirusTotal API)
+- Attachment scanning (hash-based detection)
+- Risk aggregation and scoring
 
-- **Multi-modal Detection**: Combines NLU (text), DNN (URLs/IPs), and VirusTotal (threat intelligence)
-- **Explainable AI**: Highlights specific words and phrases that indicate phishing
-- **Real-time Analysis**: Fast analysis with detailed risk assessments
-- **Multiple Input Types**: Email files (.eml), URLs, IPs, and attachments
+**Models:**
 
-### User Features
+- BERT Fine-tuned for Phishing Detection (NLU) - Text classification using transformer models
+- Multilayer Perceptron (DNN) - URL feature-based classification with 16 extracted features
 
-- **Authentication**: Secure user authentication with Supabase
-- **Analysis History**: Persistent storage of all analyses with search and filter
-- **Export Capabilities**: Export results as PDF, CSV, or JSON
-- **Dashboard Analytics**: Visual charts and statistics
-- **Threat Rules**: Custom whitelist/blacklist rules
-- **Feedback System**: Report false positives/negatives
+**Features:**
 
-### Browser Extensions
+- Explainable AI: Highlights specific words, phrases, and URL features that indicate phishing
+- Real-time analysis: Fast analysis with detailed risk assessments
+- Multi-modal detection: Combines NLU, DNN, and external threat intelligence
+- Browser extensions: Gmail and Proton Mail integration for automatic scanning
+- User education: Comprehensive educational content and red flag indicators
 
-- **Gmail Integration**: Real-time scanning in Gmail
-- **Proton Mail Integration**: Real-time scanning in Proton Mail
-- **Automatic Scanning**: Scans emails as you read them
-- **Visual Indicators**: Security badges and highlighted suspicious content
-- **Cross-browser**: Works on Chrome, Edge, and Firefox
+## Requirements
 
-### Admin Features
-
-- **Full Access**: Access all user data and analyses
-- **User Management**: Manage user roles and permissions
-- **Analytics**: View system-wide statistics
-- **Threat Intelligence**: Monitor threat patterns
-
-##  Quick Start
-
-### Prerequisites
-
-- Python 3.8+
+- Python 3.8+ (required)
+- pip, setuptools, wheel
 - Supabase account (free tier works)
 - VirusTotal API key (free tier: 4 requests/minute)
+- 8GB+ RAM recommended for model loading
 
-### Installation
+## Local Setup
 
-1. **Clone the repository:**
+### 1. Clone the repository
 
-   ```bash
-   git clone https://github.com/yourusername/DeepPhish.git
-   cd DeepPhish
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   pip install -r requirements.txt
-   pip install pyspark==3.0.2  # Required for NLU
-   ```
-
-3. **Configure environment:**
-
-   ```bash
-   cp .env.example .env
-   # Edit .env with your credentials
-   ```
-
-4. **Setup database:**
-
-   - Create Supabase project
-   - Run `database_schema.sql` in Supabase SQL Editor
-   - See `SETUP_SUPABASE.md` for details
-
-5. **Run the application:**
-
-   ```bash
-   python app.py
-   ```
-
-6. **Access the application:**
-   - Web app: http://localhost:5000
-   - Create account at `/signup`
-   - Set admin: `UPDATE user_profiles SET role = 'admin' WHERE email = 'your-email@example.com';`
-
-
-
-##  Architecture
-
-```
-┌─────────────────────────────────────────┐
-│         Browser Extensions              │
-│  (Gmail, Proton Mail)                    │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│         Flask API (app.py)              │
-│  - Authentication                       │
-│  - Analysis Routes                      │
-│  - History & Profile                    │
-└──────────────┬──────────────────────────┘
-               │
-    ┌──────────┼──────────┐
-    ▼          ▼          ▼
-┌────────┐ ┌────────┐ ┌──────────┐
-│  NLU   │ │  DNN   │ │ VirusTotal│
-│ Module │ │ Module │ │  Client   │
-└────────┘ └────────┘ └──────────┘
-    │          │          │
-    └──────────┼──────────┘
-               ▼
-┌─────────────────────────────────────────┐
-│         Supabase Database               │
-│  - Authentication                       │
-│  - Analysis History                     │
-│  - User Profiles                        │
-└─────────────────────────────────────────┘
+```bash
+git clone https://github.com/yourusername/DeepPhish.git
+cd DeepPhish
 ```
 
-##  Project Structure
+### 2. Create and activate virtual environment
 
-```
-DeepPhish/
-├── app.py                    # Main Flask application
-├── modules/                  # Business logic
-│   ├── auth.py              # Authentication
-│   ├── database.py          # Database operations
-│   ├── nlu_module.py        # NLU analysis
-│   ├── dnn_module.py        # DNN analysis
-│   ├── vt_client.py         # VirusTotal client
-│   ├── export.py            # PDF/CSV export
-│   └── ...
-├── templates/                # HTML templates
-├── static/                   # CSS, JavaScript
-├── gmail-deepPhish-extension/ # Browser extension
-├── models/                  # Pre-trained models
-└── database_schema.sql       # Database schema
+Create virtual environment (all OS):
+
+```bash
+python3 -m venv .venv
 ```
 
-##  Configuration
+Note: Ensure you have Python 3.8 or later installed. Check your version:
 
-### Environment Variables
+```bash
+python3 --version
+```
 
-Create a `.env` file:
+Activate virtual environment:
+
+**macOS/Linux:**
+
+```bash
+source .venv/bin/activate
+```
+
+**Windows (Command Prompt):**
+
+```bash
+.venv\Scripts\activate.bat
+```
+
+**Windows (PowerShell):**
+
+```bash
+.venv\Scripts\Activate.ps1
+```
+
+Note: You should see `(.venv)` in your terminal prompt when activated.
+
+### 3. Install dependencies
+
+```bash
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+
+Create a `.env` file in the project root:
 
 ```env
 SUPABASE_URL=https://your-project.supabase.co
@@ -163,104 +104,203 @@ Generate Flask secret key:
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-##  Browser Extension
+### 5. Setup database
 
-### Installation
+1. Create a Supabase project at https://supabase.com
+2. Open the SQL Editor in your Supabase dashboard
+3. Run the SQL schema from `database_schema.sql`
+4. Verify tables are created: `user_profiles`, `analysis_history`, `threat_rules`, `feedback_reports`, `organizations`
 
-#### Chrome/Edge
+### 6. Verify models
+
+The repository includes pre-trained models in the `models/` directory:
+
+- `dnn_url_classifier.pkl` - DNN model for URL classification
+- `dnn_scaler.pkl` - Feature scaler for DNN model
+
+The NLU model (`ealvaradob/bert-finetuned-phishing`) is automatically downloaded from Hugging Face on first use.
+
+### 7. Run the application
+
+```bash
+python app.py
+```
+
+Server runs at http://127.0.0.1:5000
+
+### 8. Create an account
+
+1. Navigate to http://127.0.0.1:5000/signup
+2. Create your account
+3. To set admin privileges, run in Supabase SQL Editor:
+   ```sql
+   UPDATE user_profiles SET role = 'admin' WHERE email = 'your-email@example.com';
+   ```
+
+## Browser Extension Setup
+
+### Chrome/Edge Installation
 
 1. Go to `chrome://extensions/` (or `edge://extensions/`)
-2. Enable "Developer mode"
+2. Enable "Developer mode" (toggle in top right)
 3. Click "Load unpacked"
-4. Select `gmail-deepPhish-extension/` folder
-5. Use `manifest.json`
+4. Select the `gmail-deepPhish-extension/` folder
+5. The extension will appear in your extensions list
 
-#### Firefox
+### Firefox Installation
 
 1. Go to `about:debugging`
 2. Click "This Firefox"
 3. Click "Load Temporary Add-on"
-4. Select `manifest-firefox.json` (NOT `manifest.json`)
+4. Navigate to `gmail-deepPhish-extension/` folder
+5. Select `manifest-firefox.json` (NOT `manifest.json`)
 
-See [FIREFOX_EXTENSION_SETUP.md](FIREFOX_EXTENSION_SETUP.md) for details.
+### Extension Usage
 
-##  API Endpoints
+1. Click the extension icon in your browser toolbar
+2. Click "Login" and enter your credentials
+3. Open Gmail or Proton Mail
+4. Open an email - the extension automatically scans it
+5. Security badge appears showing analysis results
+6. Click badge for detailed analysis and education links
+
+## API Endpoints
 
 ### Authentication
 
-- `POST /api/auth/signup` - Create account
-- `POST /api/auth/login` - Login
-- `GET /api/auth/verify` - Verify token
+- `POST /api/auth/signup` - Create new user account
+- `POST /api/auth/login` - Login and get access token
+- `GET /api/auth/verify` - Verify JWT token validity
+- `POST /api/auth/refresh` - Refresh access token
 
 ### Analysis
 
-- `POST /analyze/full` - Full email analysis
-- `POST /analyze/nlu` - NLU text analysis
-- `POST /analyze/url` - URL/IP analysis
-- `POST /scan/attachment` - Attachment scan
+- `POST /analyze/full` - Complete email analysis (NLU + DNN + VirusTotal)
+- `POST /analyze/nlu` - NLU text analysis only
+- `POST /analyze/url` - URL/IP analysis (DNN + VirusTotal)
+- `POST /analyze/comprehensive` - Comprehensive analysis with all modules
+- `POST /scan/attachment` - Attachment hash scanning
 
 ### History & Profile
 
-- `GET /api/history` - Get analysis history
-- `GET /api/history/<id>` - Get specific analysis
-- `GET /api/statistics` - Get user statistics
-- `GET /api/profile` - Get user profile
-- `PUT /api/profile` - Update profile
+- `GET /api/history` - Get user's analysis history (paginated)
+- `GET /api/history/<id>` - Get specific analysis by ID
+- `GET /api/statistics` - Get user statistics and analytics
+- `GET /api/profile` - Get current user profile
+- `PUT /api/profile` - Update user profile
 
 ### Export
 
-- `GET /api/export/<id>?format=pdf` - Export PDF
-- `GET /api/export/<id>?format=csv` - Export CSV
-- `GET /api/export/<id>?format=json` - Export JSON
+- `GET /api/export/<id>?format=pdf` - Export analysis as PDF
+- `GET /api/export/<id>?format=csv` - Export analysis as CSV
+- `GET /api/export/<id>?format=json` - Export analysis as JSON
 
 ### Admin
 
-- `GET /api/admin/users` - List all users
-- `GET /api/admin/analyses` - List all analyses
+- `GET /api/admin/users` - List all users (admin only)
+- `GET /api/admin/analyses` - List all analyses (admin only)
+- `GET /api/admin/statistics` - System-wide statistics (admin only)
 
-See [COMPLETE_FEATURES_WALKTHROUGH.md](COMPLETE_FEATURES_WALKTHROUGH.md) for complete API reference.
+## Project Structure
 
-##  Usage Examples
+```
+DeepPhish/
+├── app.py                          # Main Flask application
+├── modules/                        # Core business logic
+│   ├── auth.py                    # Authentication and authorization
+│   ├── database.py                # Database operations (Supabase)
+│   ├── nlu_module.py              # NLU text analysis
+│   ├── dnn_module.py              # DNN URL analysis
+│   ├── vt_client.py               # VirusTotal API client
+│   ├── eml_parser_module.py       # Email parsing utilities
+│   ├── attachment_scanner.py     # Attachment scanning
+│   └── export.py                  # PDF/CSV/JSON export
+├── templates/                     # HTML templates
+│   ├── index.html                 # Main upload page
+│   ├── results.html               # Analysis results display
+│   ├── dashboard.html             # Analytics dashboard
+│   ├── history.html               # Analysis history
+│   ├── profile.html               # User profile
+│   ├── education.html             # Educational content
+│   └── ...
+├── static/                        # Static assets
+│   ├── styles.css                 # Main stylesheet
+│   ├── theme.js                   # Theme management
+│   ├── css/
+│   │   └── dashboard.css          # Dashboard styles
+│   └── js/
+│       └── dashboard.js           # Dashboard scripts
+├── gmail-deepPhish-extension/     # Browser extension
+│   ├── manifest.json              # Chrome/Edge manifest
+│   ├── manifest-firefox.json      # Firefox manifest
+│   ├── content.js                 # Gmail content script
+│   ├── content-proton.js          # Proton Mail content script
+│   ├── background.js              # Background service worker
+│   ├── popup.html                 # Extension popup UI
+│   ├── popup.js                   # Popup logic
+│   └── styles/                    # Extension styles
+├── models/                        # Pre-trained models
+│   ├── dnn_url_classifier.pkl     # DNN model
+│   └── dnn_scaler.pkl             # Feature scaler
+├── phishing_model_fast/           # NLU model cache
+├── database_schema.sql             # Database schema
+├── database_expansions.sql        # Optional database expansions
+├── requirements.txt               # Python dependencies
+└── .env                           # Environment variables (not in git)
+```
+
+## Configuration
+
+### Environment Variables
+
+All configuration is done through environment variables in `.env`:
+
+- `SUPABASE_URL` - Your Supabase project URL
+- `SUPABASE_ANON_KEY` - Supabase anonymous key
+- `FLASK_SECRET_KEY` - Flask session secret (generate with Python secrets module)
+- `VIRUSTOTAL_API_KEY` - VirusTotal API key for threat intelligence
+
+### Model Configuration
+
+**NLU Model:**
+
+- Model: `ealvaradob/bert-finetuned-phishing` (Hugging Face)
+- Automatically downloaded on first use
+- Cached in `phishing_model_fast/` directory
+
+**DNN Model:**
+
+- Pre-trained MLP classifier
+- 16 URL features extracted per URL
+- Models loaded from `models/` directory
+
+## Usage Examples
 
 ### Web Application
 
-1. **Sign Up/Login:**
+**Analyze Email:**
 
-   ```
-   Go to http://localhost:5000/signup
-   Create account or login
-   ```
+1. Navigate to http://localhost:5000
+2. Upload `.eml` file or paste email content
+3. Click "Full Analysis" or "NLU Analysis"
+4. View detailed results with explainability
 
-2. **Analyze Email:**
+**View History:**
 
-   ```
-   Go to http://localhost:5000
-   Upload .eml file
-   Click "Full Analysis"
-   View results
-   ```
+1. Navigate to http://localhost:5000/history
+2. Filter by date, type, or risk level
+3. Click on any analysis to view details
+4. Export results as PDF, CSV, or JSON
 
-3. **View History:**
-   ```
-   Go to http://localhost:5000/history
-   Filter and search analyses
-   Export results
-   ```
+**Dashboard:**
 
-### Browser Extension
-
-1. **Install Extension** (see above)
-2. **Authenticate:**
-   - Click extension icon
-   - Click "Login"
-   - Enter credentials
-3. **Use:**
-   - Open Gmail or Proton Mail
-   - Open an email
-   - Extension automatically scans
-   - Security badge appears
+1. Navigate to http://localhost:5000/dashboard
+2. View statistics and analytics
+3. See charts for analysis trends
 
 ### API Usage
+
+**Python Example:**
 
 ```python
 import requests
@@ -279,59 +319,71 @@ response = requests.post(
     json={"url": "https://example.com"}
 )
 result = response.json()
+print(result)
 ```
 
-##  Database
+**cURL Example:**
 
-### Current Schema
+```bash
+# Login
+curl -X POST http://localhost:5000/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"user@example.com","password":"password"}'
 
-- `organizations` - Organizations/teams
-- `analysis_history` - Analysis results
-- `user_profiles` - User profiles
-- `threat_rules` - Whitelist/blacklist rules
+# Analyze email content
+curl -X POST http://localhost:5000/analyze/nlu \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -d '{"text":"Your email content here"}'
+```
+
+## Database Schema
+
+### Core Tables
+
+- `user_profiles` - User accounts and preferences
+- `analysis_history` - All analysis results and metadata
+- `threat_rules` - Custom whitelist/blacklist rules
 - `feedback_reports` - False positive/negative reports
+- `organizations` - Organization/team management
 
 ### Optional Expansions
 
-See [database_expansions.sql](database_expansions.sql) for:
+See `database_expansions.sql` for additional tables:
 
-- Email similarity & campaigns
-- Domain/IP cache
-- Alerts & notifications
+- Email similarity and campaign detection
+- Domain/IP reputation cache
+- Alerts and notifications
 - Model performance tracking
-- API usage & rate limiting
-- And more...
+- API usage and rate limiting
 
-##  Security
+## Security
 
-- **Authentication**: JWT-based with Supabase
-- **Authorization**: Role-based access control (RBAC)
-- **Data Protection**: Row Level Security (RLS) on all tables
-- **API Security**: CORS configured, token verification
-- **Input Validation**: All inputs validated
-- **SQL Injection Prevention**: Parameterized queries
+- **Authentication**: JWT-based authentication with Supabase
+- **Authorization**: Role-based access control (RBAC) with admin/user roles
+- **Data Protection**: Row Level Security (RLS) enabled on all Supabase tables
+- **API Security**: CORS configured for browser extensions, token verification on protected routes
+- **Input Validation**: All user inputs validated and sanitized
+- **SQL Injection Prevention**: Parameterized queries via Supabase client
 
-## 🛠️ Development
+## Development
 
 ### Adding New Features
 
-1. **Plan the feature**
-2. **Design API and database schema**
-3. **Implement in modules/**
-4. **Add routes in app.py**
-5. **Update frontend**
-6. **Test thoroughly**
-7. **Update documentation**
-
-See [ARCHITECTURE_WALKTHROUGH.md](ARCHITECTURE_WALKTHROUGH.md) for detailed guide.
+1. **Plan the feature** - Design API endpoints and database schema
+2. **Implement in modules/** - Add business logic to appropriate module
+3. **Add routes in app.py** - Create Flask routes with proper authentication
+4. **Update frontend** - Add UI components in templates and static files
+5. **Test thoroughly** - Test all code paths and error cases
+6. **Update documentation** - Document new features and API endpoints
 
 ### Code Organization
 
-- **Separation of Concerns**: Each module has single responsibility
-- **DRY Principle**: No code duplication
-- **Error Handling**: Consistent error handling
-- **Documentation**: All functions documented
-- **Type Hints**: Type hints for clarity
+- **Separation of Concerns**: Each module has a single responsibility
+- **DRY Principle**: No code duplication, reusable utilities
+- **Error Handling**: Consistent error handling and user-friendly messages
+- **Type Hints**: Type hints used throughout for clarity
+- **Documentation**: All functions documented with docstrings
 
 ### Testing
 
@@ -346,88 +398,100 @@ flake8 .
 mypy .
 ```
 
-##  Performance
+## Performance
 
 ### Optimizations
 
-- **Lazy Model Loading**: Models loaded on first use
-- **Domain Caching**: Cache VirusTotal results
-- **Database Indexes**: Optimized queries
-- **Pagination**: Efficient data retrieval
-- **Debouncing**: Reduced API calls
+- **Lazy Model Loading**: Models loaded on first use, cached in memory
+- **Domain Caching**: VirusTotal results cached to reduce API calls
+- **Database Indexes**: Optimized queries with proper indexing
+- **Pagination**: Efficient data retrieval with pagination
+- **Debouncing**: Extension uses debouncing to reduce API calls
+- **Request Batching**: Multiple URLs analyzed in single request
 
 ### Monitoring
 
-- API usage logs
-- Error tracking
-- Performance metrics
-- User feedback
+- API usage logs for debugging
+- Error tracking and reporting
+- Performance metrics collection
+- User feedback system for model improvement
 
-##  Contributing
+## Hardware Requirements
+
+**Minimum:**
+
+- 8GB RAM
+- Any CPU
+- Internet connection for model downloads and API calls
+
+**Recommended:**
+
+- 16GB+ RAM for faster model loading
+- GPU support optional (speeds up NLU inference)
+- Stable internet connection for VirusTotal API
+
+**Developed on:** Various systems with Python 3.8+ support
+
+## Troubleshooting
+
+**Python version error?** This project requires Python 3.8 or later. Check your version:
+
+```bash
+python3 --version  # Should show 3.8.x or higher
+```
+
+**Virtual environment not active?**
+
+- macOS/Linux: `source .venv/bin/activate`
+- Windows (Command Prompt): `.venv\Scripts\activate.bat`
+- Windows (PowerShell): `.venv\Scripts\Activate.ps1`
+
+**Model loading errors?** The NLU model downloads automatically from Hugging Face. Ensure you have internet connectivity on first run.
+
+**Database connection errors?** Verify your `.env` file has correct Supabase credentials and that your Supabase project is active.
+
+**Extension not working?**
+
+- Check browser console for errors
+- Verify you're logged in via extension popup
+- Ensure Flask server is running and accessible
+- Check CORS settings in `app.py`
+
+**Port already in use?** Change the port in `app.py`:
+
+```python
+app.run(host='0.0.0.0', port=5001, debug=True)
+```
+
+**Out of memory during analysis?** Reduce batch sizes or analyze smaller email chunks.
+
+## Contributing
+
+We welcome contributions! Please follow these guidelines:
 
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ### Code Style
 
-- Follow PEP 8
-- Use type hints
-- Document all functions
+- Follow PEP 8 style guide
+- Use type hints for function parameters and returns
+- Document all functions with docstrings
 - Write tests for new features
+- Ensure all tests pass before submitting PR
 
-##  License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-##  Acknowledgments
+## Acknowledgments
 
-- **Hugging Face** - Transformers library for NLU
+- **Hugging Face** - Transformers library and pre-trained BERT models
 - **VirusTotal** - Threat intelligence API
-- **Supabase** - Authentication and database
+- **Supabase** - Authentication and database backend
 - **Flask** - Web framework
-- **Chart.js** - Dashboard visualizations
-
-##  Support
-
-- **Documentation**: See documentation files listed above
-- **Issues**: Open an issue on GitHub
-
-
-##  Roadmap
-
-### Planned Features
-
-- [ ] Email notifications
-- [ ] Campaign detection
-- [ ] Threat intelligence feeds
-- [ ] Model retraining with feedback
-- [ ] Advanced search
-- [ ] Batch export
-- [ ] API rate limiting UI
-- [ ] Organization management UI
-
-### In Progress
-
-- [x] Authentication system
-- [x] Analysis history
-- [x] Export functionality
-- [x] Dashboard with charts
-- [x] Threat rules management
-- [x] Browser extensions
-
-##  Statistics
-
-- **Analysis Types**: 5 (full, nlu, url, attachment, comprehensive)
-- **API Endpoints**: 20+
-- **Database Tables**: 5 (base) + 14 (expansions)
-- **Browser Support**: Chrome, Edge, Firefox
-- **Email Providers**: Gmail, Proton Mail
-
----
-
-**Built with ❤️ for better email security**
-
-For detailed information, see the [documentation files](#-documentation).
+- **PyTorch** - Deep learning framework
+- **scikit-learn** - Machine learning utilities
